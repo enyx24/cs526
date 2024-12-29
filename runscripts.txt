@@ -1,0 +1,2 @@
+docker run -it --privileged --network bridge --rm -v /d/ff:/app -p 8081:8081 -p 5037:5037 -p 5555:5555 -p 5554:5554 reactnativecommunity/react-native-android
+adb connect host.docker.internal:5555
