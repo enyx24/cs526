@@ -7,7 +7,7 @@ const OCRButton = () => {
 
     const handlePress = () => {
         // Điều hướng đến màn hình HomeScreen khi OCRButton được nhấn
-        navigation.navigate('Nhập vào');
+        navigation.navigate('OCR');
     };
 
     return (
@@ -36,8 +36,8 @@ const styles = StyleSheet.create({
         borderRadius: 30,
     },
     image: {
-        width: 50,
-        height: 50,
+        width: 40,
+        height: 40,
     },
 });
 
