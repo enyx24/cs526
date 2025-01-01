@@ -44,10 +44,28 @@ const App = ({ navigation }) => {
   const addCategory = () => {
     if (newCategory.trim() === '') return;
 
-    const newId = categories.length + 1;
-    setCategories([...categories, { id: newId, name: newCategory }]);
+    
+    if (activeTab === 'expense') {
+      const newCategoryItem = { id: Date.now(), name: newCategory, type: 0 };
+      setExpenseCategories([...expenseCategories, newCategoryItem]);
+    } else {
+      const newCategoryItem = { id: Date.now(), name: newCategory, type: 1 };
+      setIncomeCategories([...incomeCategories, newCategoryItem]);
+    }
     setNewCategory('');
   };
+  const deleteCategory = (id) => {
+  if (activeTab === 'expense') {
+    // Xóa khỏi danh mục chi tiêu
+    const updatedCategories = expenseCategories.filter((item) => item.id !== id);
+    setExpenseCategories(updatedCategories);
+  } else {
+    // Xóa khỏi danh mục thu nhập
+    const updatedCategories = incomeCategories.filter((item) => item.id !== id);
+    setIncomeCategories(updatedCategories);
+  }
+};
+
   // Gọi hàm tạo bảng khi ứng dụng khởi động
   useEffect(() => {
     createCategoryTable();
@@ -235,6 +253,7 @@ const App = ({ navigation }) => {
         newCategory={newCategory}
         setNewCategory={setNewCategory}
         addCategory={addCategory}
+        deleteCategory={deleteCategory}
       />
       {/* Submit Button */}
       <TouchableOpacity style={styles.submitButton} onPress={saveTransaction}>

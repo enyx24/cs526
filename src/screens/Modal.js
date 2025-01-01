@@ -9,41 +9,21 @@ import {
   StyleSheet,
   Modal,
 } from 'react-native';
-import { addCategory, deleteCategory } from '../database/category';
+import { deleteCategory } from '../database/category';
 
 const CategoryModal = ({
   isVisible,
   closeModal,
   categories,
-  setCategories,
   newCategory,
   setNewCategory,
+  addCategory,
 }) => {
-  // Hàm thêm danh mục mới
-  const handleAddCategory = () => {
-    if (newCategory.trim() === '') return;
-
-    // Truyền type là 0 (expense) hoặc 1 (income)
-    addCategory(newCategory, 0, () => { // Truyền thêm type = 0
-        const newCategoryItem = { id: Date.now(), name: newCategory, type: 0 };
-        setCategories([...categories, newCategoryItem]); // Cập nhật danh sách danh mục
-        setNewCategory(''); // Reset input
-    });
-    };
-
-
-  // Hàm xóa danh mục
-  const handleDeleteCategory = (id) => {
-    deleteCategory(id, () => {
-      const updatedCategories = categories.filter((item) => item.id !== id);
-      setCategories(updatedCategories); // Cập nhật danh sách danh mục
-    });
-  };
-
   return (
     <Modal
       visible={isVisible}
       animationType="slide"
+      transparent={true}
       onRequestClose={closeModal}
     >
       <SafeAreaView style={styles.modalContainer}>
@@ -56,11 +36,12 @@ const CategoryModal = ({
               <Text>{item.name}</Text>
               <TouchableOpacity
                 style={styles.deleteButton}
-                onPress={() => handleDeleteCategory(item.id)}
+                onPress={() => deleteCategory(item.id)}
               >
                 <Text style={styles.deleteButtonText}>Xóa</Text>
               </TouchableOpacity>
             </View>
+            
           )}
         />
         <TextInput
@@ -69,7 +50,7 @@ const CategoryModal = ({
           value={newCategory}
           onChangeText={setNewCategory}
         />
-        <TouchableOpacity style={styles.addButton} onPress={handleAddCategory}>
+        <TouchableOpacity style={styles.addButton} onPress={addCategory}>
           <Text style={styles.addButtonText}>Thêm</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.closeButton} onPress={closeModal}>
@@ -94,14 +75,10 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   modalItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     backgroundColor: '#FFF',
     padding: 16,
     marginVertical: 8,
     borderRadius: 8,
-    width: '80%',
   },
   textInput: {
     width: '80%',
@@ -120,16 +97,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   addButtonText: {
-    color: '#FFFFFF',
-    fontWeight: 'bold',
-  },
-  deleteButton: {
-    backgroundColor: '#FF0000',
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    borderRadius: 8,
-  },
-  deleteButtonText: {
     color: '#FFFFFF',
     fontWeight: 'bold',
   },
