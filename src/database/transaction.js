@@ -27,7 +27,7 @@ export const addTransaction = (transaction, successCallback, errorCallback) => {
   db.transaction((tx) => {
     tx.executeSql(
       `INSERT INTO transactions (date, note, source, amount, type, category) VALUES (?, ?, ?, ?, ?, ?);`,
-      [date, note, source, parseFloat(amount), type],
+      [date, note, source, parseFloat(amount), type, category],
       (_, result) => {
         if (successCallback) successCallback(result);
       },

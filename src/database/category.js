@@ -19,15 +19,26 @@ export const createCategoryTable = () => {
   });
 };
 
-// Thêm danh mục vào bảng
-export const addCategory = (name, callback) => {
+export const addCategory = (name, type, callback) => {
+  if (!name || name.trim() === '') {
+    console.log('Category name is required');
+    return;
+  }
+
+  if (type !== 0 && type !== 1) {
+    console.log('Invalid category type');
+    return;
+  }
+
   db.transaction(tx => {
     tx.executeSql(
       'INSERT INTO categories (name, type) VALUES (?, ?)',
-      [name],
+      [name.trim(), type],
       () => {
         console.log('Category added successfully');
-        callback();
+        if (callback) {
+          callback(); // Chỉ gọi callback nếu nó tồn tại
+        }
       },
       error => {
         console.log('Error inserting category: ', error);
@@ -35,6 +46,7 @@ export const addCategory = (name, callback) => {
     );
   });
 };
+
 
 // Tải danh sách danh mục với type = 0
 export const loadExpenseCategories = (callback) => {

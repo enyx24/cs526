@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import RNPickerSelect from 'react-native-picker-select';
 import { loadSources } from '../database/source';
 import { addTransaction, initializeDatabase } from '../database/transaction';
+import CategoryModal from './Modal'; // Import Component Modal
 import {
   createCategoryTable,
   loadExpenseCategories,
@@ -227,37 +228,14 @@ const App = ({ navigation }) => {
         style={styles.categoryContainer}
       />
       {/* Modal quản lý danh mục */}
-      <Modal
-        visible={isModalVisible}
-        animationType="slide"
-        transparent={true} 
-        onRequestClose={closeModal}
-      >
-        <SafeAreaView style={styles.modalContainer}>
-          <Text style={styles.modalTitle}>Quản lý danh mục</Text>
-          <FlatList
-            data={categories}
-            keyExtractor={(item) => item.id.toString()}
-            renderItem={({ item }) => (
-              <View style={styles.modalItem}>
-                <Text>{item.name}</Text>
-              </View>
-            )}
-          />
-          <TextInput
-            style={styles.textInput}
-            placeholder="Thêm danh mục mới"
-            value={newCategory}
-            onChangeText={setNewCategory}
-          />
-          <TouchableOpacity style={styles.addButton} onPress={addCategory}>
-            <Text style={styles.addButtonText}>Thêm</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.closeButton} onPress={closeModal}>
-            <Text style={styles.closeButtonText}>Đóng</Text>
-          </TouchableOpacity>
-        </SafeAreaView>
-      </Modal>
+      <CategoryModal
+        isVisible={isModalVisible}
+        closeModal={closeModal}
+        categories={categories}
+        newCategory={newCategory}
+        setNewCategory={setNewCategory}
+        addCategory={addCategory}
+      />
       {/* Submit Button */}
       <TouchableOpacity style={styles.submitButton} onPress={saveTransaction}>
         <Text style={styles.submitText}>
