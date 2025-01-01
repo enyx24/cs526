@@ -89,6 +89,13 @@ const App = () => {
 
       <View style={styles.inputContainer}>
         <Text style={styles.label}>
+          {activeTab === 'expense' ? 'Nguồn chi' : 'Nguồn thu'}
+        </Text>
+        <TextInput style={styles.textInput} placeholder="Chưa nhập vào" />
+      </View>
+
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>
           {activeTab === 'expense' ? 'Tiền chi' : 'Tiền thu'}
         </Text>
         <TextInput

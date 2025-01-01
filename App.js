@@ -2,9 +2,10 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/Ionicons';
-import CalendarScreen from './src/screens/CalendarScreen'; // Đường dẫn đến file CalendarScreen
+import CalendarScreen from './src/screens/CalendarScreen'; 
 import HomeScreen from './src/screens/HomeScreen';
 import AboutScreen from './src/screens/AboutScreen';
+import SourceScreen from './src/screens/SourceScreen';
 const Tab = createBottomTabNavigator();
 
 export default function App() {
@@ -34,6 +35,8 @@ export default function App() {
         <Tab.Screen name="Nhập vào" component={HomeScreen} />
         <Tab.Screen name="Lịch" component={CalendarScreen} />
         <Tab.Screen name="Báo cáo" component={AboutScreen} />
+        
+        <Tab.Screen name="Nguồn" component={SourceScreen} />
         <Tab.Screen name="Khác" component={CalendarScreen} />
       </Tab.Navigator>
     </NavigationContainer>
