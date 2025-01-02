@@ -21,36 +21,53 @@ export const createCategoryTable = () => {
 
 export const addCategory = (name, type, callback) => {
   if (!name || name.trim() === '') {
-    console.log('Category name is required');
+    console.log('Tên danh mục không được để trống');
     return;
   }
 
   if (type !== 0 && type !== 1) {
-    console.log('Invalid category type');
+    console.log('Loại danh mục không hợp lệ');
     return;
   }
 
+  // Kiểm tra xem danh mục có tồn tại hay không
   db.transaction(tx => {
     tx.executeSql(
-      'INSERT INTO categories (name, type) VALUES (?, ?)',
+      'SELECT * FROM categories WHERE name = ? AND type = ?',
       [name.trim(), type],
       (tx, results) => {
-        console.log('Category added successfully');
-        const newCategory = {
-          id: results.insertId, // ID tự động được tạo bởi SQLite
-          name: name.trim(),
-          type: type,
-        };
-        if (callback) {
-          callback(newCategory);
+        if (results.rows.length > 0) {
+          console.log('Danh mục đã tồn tại');
+          return;
+        } else {
+          // Thêm danh mục nếu không trùng
+          tx.executeSql(
+            'INSERT INTO categories (name, type) VALUES (?, ?)',
+            [name.trim(), type],
+            (tx, insertResults) => {
+              console.log('Danh mục được thêm thành công');
+              const newCategory = {
+                id: insertResults.insertId,
+                name: name.trim(),
+                type: type,
+              };
+              if (callback) {
+                callback(newCategory);
+              }
+            },
+            error => {
+              console.log('Lỗi khi thêm danh mục: ', error);
+            }
+          );
         }
       },
       error => {
-        console.log('Error inserting category: ', error);
+        console.log('Lỗi khi kiểm tra danh mục: ', error);
       }
     );
   });
 };
+
 
 
 // Tải danh sách danh mục với type = 0

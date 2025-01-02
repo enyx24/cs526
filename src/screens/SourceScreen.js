@@ -3,20 +3,36 @@ import {
   SafeAreaView,
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   FlatList,
   StyleSheet,
+  TextInput,
 } from 'react-native';
+import RNPickerSelect from 'react-native-picker-select';
 import { createTable, addSource, loadSources, deleteSource } from '../database/source';
 
 const App = () => {
-  const [name, setName] = useState(''); // Tên nguồn tiền
+  const [selectedSource, setSelectedSource] = useState(''); // Tên nguồn tiền được chọn
   const [amount, setAmount] = useState(''); // Số tiền
   const [note, setNote] = useState(''); // Ghi chú
   const [sources, setSources] = useState([]); // Danh sách nguồn tiền
   const [showCreateSource, setShowCreateSource] = useState(true); // Điều khiển màn hình tạo nguồn tiền
   const [showSourceList, setShowSourceList] = useState(false); // Điều khiển màn hình danh sách nguồn tiền
+
+  // Danh sách ngân hàng/ví điện tử cố định
+  const sourceOptions = [
+    { label: 'MoMo', value: 'MoMo' },
+    { label: 'Tiền mặt', value: 'Tiền mặt' },
+    { label: 'Techcombank', value: 'Techcombank' },
+    { label: 'ACB', value: 'ACB' },
+    { label: 'Vietcombank', value: 'Vietcombank' },
+    { label: 'Agribank', value: 'Agribank' },
+    { label: 'Sacombank', value: 'Sacombank' },
+    { label: 'BIDV', value: 'BIDV' },
+    { label: 'MB', value: 'MB' },
+    { label: 'HDBank', value: 'HDBank' },
+    { label: 'VietinBank', value: 'VietinBank' }
+  ];
 
   // Tạo bảng khi lần đầu tiên sử dụng ứng dụng
   useEffect(() => {
@@ -25,16 +41,16 @@ const App = () => {
 
   // Hàm thêm nguồn tiền
   const handleAddSource = () => {
-    if (!name || !amount) {
-      alert('Vui lòng nhập đầy đủ thông tin!');
+    if (!selectedSource || !amount) {
+      alert('Vui lòng chọn nguồn tiền và nhập số tiền!');
       return;
     }
 
-    addSource(name, parseFloat(amount).toLocaleString() + ' đ', note, () => {
+    addSource(selectedSource, parseFloat(amount).toLocaleString() + ' đ', note, () => {
       loadSourcesList();
     });
 
-    setName('');
+    setSelectedSource('');
     setAmount('');
     setNote('');
   };
@@ -97,12 +113,13 @@ const App = () => {
           <Text style={styles.title}>Tạo Nguồn Tiền</Text>
 
           <View style={styles.inputContainer}>
-            <Text style={styles.label}>Tên nguồn tiền</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Nhập tên nguồn tiền"
-              value={name}
-              onChangeText={(text) => setName(text)}
+            <Text style={styles.label}>Nguồn tiền</Text>
+            <RNPickerSelect
+              onValueChange={(value) => setSelectedSource(value)}
+              items={sourceOptions}
+              placeholder={{ label: 'Chọn nguồn tiền', value: '' }}
+              style={pickerSelectStyles}
+              value={selectedSource}
             />
           </View>
 
@@ -262,6 +279,31 @@ const styles = StyleSheet.create({
     color: '#666',
     marginTop: 20,
     fontSize: 14,
+  },
+});
+
+const pickerSelectStyles = StyleSheet.create({
+  inputIOS: {
+    fontSize: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    borderRadius: 8,
+    backgroundColor: '#FFFFFF',
+    color: '#000',
+    marginBottom: 8,
+  },
+  inputAndroid: {
+    fontSize: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    borderRadius: 8,
+    backgroundColor: '#FFFFFF',
+    color: '#000',
+    marginBottom: 8,
   },
 });
 
