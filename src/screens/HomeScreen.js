@@ -18,6 +18,21 @@ import {
   FlatList,
   Modal
 } from 'react-native';
+import { addCategory, deleteCategory } from '../database/category';
+
+const addCategoryToDatabase = (name, type, callback) => {
+  addCategory(name, type, (newCategory) => {
+    callback(newCategory); // Trả về toàn bộ đối tượng danh mục mới
+  });
+};
+
+const deleteCategoryFromDatabase = (id, callback) => {
+  console.log('Calling deleteCategoryFromDatabase with id:', id);
+  deleteCategory(id, () => {
+    console.log('Callback from deleteCategory called');
+    callback();
+  });
+};
 
 const App = ({ navigation }) => {
   const [activeTab, setActiveTab] = useState('expense'); // Quản lý tab đang chọn
@@ -42,29 +57,36 @@ const App = ({ navigation }) => {
   };
   // Hàm thêm danh mục mới
   const addCategory = () => {
-    if (newCategory.trim() === '') return;
+  if (newCategory.trim() === '') return;
 
-    
-    if (activeTab === 'expense') {
-      const newCategoryItem = { id: Date.now(), name: newCategory, type: 0 };
+  const type = activeTab === 'expense' ? 0 : 1;
+
+  addCategoryToDatabase(newCategory, type, (newCategoryItem) => {
+    if (type === 0) {
       setExpenseCategories([...expenseCategories, newCategoryItem]);
     } else {
-      const newCategoryItem = { id: Date.now(), name: newCategory, type: 1 };
       setIncomeCategories([...incomeCategories, newCategoryItem]);
     }
     setNewCategory('');
-  };
-  const deleteCategory = (id) => {
-  if (activeTab === 'expense') {
-    // Xóa khỏi danh mục chi tiêu
-    const updatedCategories = expenseCategories.filter((item) => item.id !== id);
-    setExpenseCategories(updatedCategories);
-  } else {
-    // Xóa khỏi danh mục thu nhập
-    const updatedCategories = incomeCategories.filter((item) => item.id !== id);
-    setIncomeCategories(updatedCategories);
-  }
+  });
 };
+
+  const deleteCategory1 = (id) => {
+  deleteCategoryFromDatabase(id, () => {
+    if (activeTab === 'expense') {
+      const updatedCategories = expenseCategories.filter(
+        (category) => category.id !== id
+      );
+      setExpenseCategories(updatedCategories);
+    } else {
+      const updatedCategories = incomeCategories.filter(
+        (category) => category.id !== id
+      );
+      setIncomeCategories(updatedCategories);
+    }
+  });
+};
+
 
   // Gọi hàm tạo bảng khi ứng dụng khởi động
   useEffect(() => {
@@ -92,7 +114,7 @@ const App = ({ navigation }) => {
       setIncomeCategories([...categories, { id: -1, name: 'Chỉnh sửa' }]);
     });
   }, []);
-
+  
   // Lấy danh mục theo tab
   const categories =
     activeTab === 'expense' ? expenseCategories : incomeCategories;
@@ -245,7 +267,6 @@ const App = ({ navigation }) => {
         )}
         style={styles.categoryContainer}
       />
-      {/* Modal quản lý danh mục */}
       <CategoryModal
         isVisible={isModalVisible}
         closeModal={closeModal}
@@ -253,8 +274,9 @@ const App = ({ navigation }) => {
         newCategory={newCategory}
         setNewCategory={setNewCategory}
         addCategory={addCategory}
-        deleteCategory={deleteCategory}
+        deleteCategory={deleteCategory1} // Truyền hàm deleteCategory1
       />
+
       {/* Submit Button */}
       <TouchableOpacity style={styles.submitButton} onPress={saveTransaction}>
         <Text style={styles.submitText}>

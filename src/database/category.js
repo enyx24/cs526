@@ -34,10 +34,15 @@ export const addCategory = (name, type, callback) => {
     tx.executeSql(
       'INSERT INTO categories (name, type) VALUES (?, ?)',
       [name.trim(), type],
-      () => {
+      (tx, results) => {
         console.log('Category added successfully');
+        const newCategory = {
+          id: results.insertId, // ID tự động được tạo bởi SQLite
+          name: name.trim(),
+          type: type,
+        };
         if (callback) {
-          callback(); // Chỉ gọi callback nếu nó tồn tại
+          callback(newCategory);
         }
       },
       error => {
@@ -89,20 +94,18 @@ export const loadIncomeCategories = (callback) => {
 };
 
 
-// Xóa danh mục
 export const deleteCategory = (id, callback) => {
-  db.transaction(tx => {
+  db.transaction((tx) => {
     tx.executeSql(
       'DELETE FROM categories WHERE id = ?',
       [id],
       () => {
-        console.log('Category deleted successfully');
+        console.log(`Category with id ${id} deleted successfully`);
         callback();
       },
-      error => {
+      (error) => {
         console.log('Error deleting category: ', error);
       }
     );
   });
 };
-

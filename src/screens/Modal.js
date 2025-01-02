@@ -9,7 +9,7 @@ import {
   StyleSheet,
   Modal,
 } from 'react-native';
-import { deleteCategory } from '../database/category';
+// import { deleteCategory } from '../database/category';
 
 const CategoryModal = ({
   isVisible,
@@ -18,6 +18,7 @@ const CategoryModal = ({
   newCategory,
   setNewCategory,
   addCategory,
+  deleteCategory
 }) => {
   return (
     <Modal
@@ -30,20 +31,23 @@ const CategoryModal = ({
         <Text style={styles.modalTitle}>Quản lý danh mục</Text>
         <FlatList
           data={categories}
+          extraData={categories} // Buộc FlatList cập nhật khi state thay đổi
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => (
             <View style={styles.modalItem}>
               <Text>{item.name}</Text>
               <TouchableOpacity
                 style={styles.deleteButton}
-                onPress={() => deleteCategory(item.id)}
+                onPress={() => {
+                  deleteCategory(item.id);
+                }}
               >
                 <Text style={styles.deleteButtonText}>Xóa</Text>
               </TouchableOpacity>
             </View>
-            
           )}
         />
+
         <TextInput
           style={styles.textInput}
           placeholder="Thêm danh mục mới"
