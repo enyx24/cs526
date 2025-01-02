@@ -38,11 +38,11 @@ export const addTransaction = (transaction, successCallback, errorCallback) => {
   });
 };
 
-// Hàm lấy danh sách các giao dịch
-export const getTransactions = (callback) => {
+// Hàm lấy danh sách các giao dịch chi tiêu
+export const getExpenseTransactions = (callback) => {
   db.transaction((tx) => {
     tx.executeSql(
-      `SELECT * FROM transactions;`,
+      `SELECT * FROM transactions WHERE type = 'expense';`,
       [],
       (_, result) => {
         const rows = result.rows;
@@ -53,7 +53,28 @@ export const getTransactions = (callback) => {
         callback(transactions);
       },
       (error) => {
-        console.log('Lỗi khi lấy dữ liệu:', error);
+        console.log('Lỗi khi lấy dữ liệu giao dịch chi tiêu:', error);
+      }
+    );
+  });
+};
+
+// Hàm lấy danh sách các giao dịch thu nhập
+export const getIncomeTransactions = (callback) => {
+  db.transaction((tx) => {
+    tx.executeSql(
+      `SELECT * FROM transactions WHERE type = 'income';`,
+      [],
+      (_, result) => {
+        const rows = result.rows;
+        let transactions = [];
+        for (let i = 0; i < rows.length; i++) {
+          transactions.push(rows.item(i));
+        }
+        callback(transactions);
+      },
+      (error) => {
+        console.log('Lỗi khi lấy dữ liệu giao dịch thu nhập:', error);
       }
     );
   });

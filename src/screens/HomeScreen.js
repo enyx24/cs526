@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import RNPickerSelect from 'react-native-picker-select';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { loadSources } from '../database/source';
 import { addTransaction, initializeDatabase } from '../database/transaction';
 import CategoryModal from './Modal'; // Import Component Modal
@@ -16,7 +17,8 @@ import {
   TouchableOpacity,
   StyleSheet,
   FlatList,
-  Modal
+  Modal,
+  Platform,
 } from 'react-native';
 import { addCategory, deleteCategory } from '../database/category';
 
@@ -42,10 +44,13 @@ const App = ({ navigation }) => {
   const [selectedSource, setSelectedSource] = useState(null);
   const [note, setNote] = useState('');
   const [amount, setAmount] = useState('');
-  const [date, setDate] = useState('01/01/2025'); // Mặc định ngày hiện tại
+  const [date, setDate] = useState(new Date()); // Mặc định là ngày hiện tại
+  const [showDatePicker, setShowDatePicker] = useState(false); // Trạng thái hiển thị DatePicker
   const [errorMessage, setErrorMessage] = useState('');
   const [expenseCategories, setExpenseCategories] = useState([]); // Danh mục chi tiêu
   const [incomeCategories, setIncomeCategories] = useState([]); // Danh mục thu nhập
+  const [selectedCategory, setSelectedCategory] = useState(null); // Danh mục được chọn
+
   // Hàm mở Modal
   const openModal = () => {
     setIsModalVisible(true);
@@ -55,38 +60,38 @@ const App = ({ navigation }) => {
   const closeModal = () => {
     setIsModalVisible(false);
   };
+
   // Hàm thêm danh mục mới
   const addCategory = () => {
-  if (newCategory.trim() === '') return;
+    if (newCategory.trim() === '') return;
 
-  const type = activeTab === 'expense' ? 0 : 1;
+    const type = activeTab === 'expense' ? 0 : 1;
 
-  addCategoryToDatabase(newCategory, type, (newCategoryItem) => {
-    if (type === 0) {
-      setExpenseCategories([...expenseCategories, newCategoryItem]);
-    } else {
-      setIncomeCategories([...incomeCategories, newCategoryItem]);
-    }
-    setNewCategory('');
-  });
-};
+    addCategoryToDatabase(newCategory, type, (newCategoryItem) => {
+      if (type === 0) {
+        setExpenseCategories([...expenseCategories, newCategoryItem]);
+      } else {
+        setIncomeCategories([...incomeCategories, newCategoryItem]);
+      }
+      setNewCategory('');
+    });
+  };
 
   const deleteCategory1 = (id) => {
-  deleteCategoryFromDatabase(id, () => {
-    if (activeTab === 'expense') {
-      const updatedCategories = expenseCategories.filter(
-        (category) => category.id !== id
-      );
-      setExpenseCategories(updatedCategories);
-    } else {
-      const updatedCategories = incomeCategories.filter(
-        (category) => category.id !== id
-      );
-      setIncomeCategories(updatedCategories);
-    }
-  });
-};
-
+    deleteCategoryFromDatabase(id, () => {
+      if (activeTab === 'expense') {
+        const updatedCategories = expenseCategories.filter(
+          (category) => category.id !== id
+        );
+        setExpenseCategories(updatedCategories);
+      } else {
+        const updatedCategories = incomeCategories.filter(
+          (category) => category.id !== id
+        );
+        setIncomeCategories(updatedCategories);
+      }
+    });
+  };
 
   // Gọi hàm tạo bảng khi ứng dụng khởi động
   useEffect(() => {
@@ -114,24 +119,25 @@ const App = ({ navigation }) => {
       setIncomeCategories([...categories, { id: -1, name: 'Chỉnh sửa' }]);
     });
   }, []);
-  
+
   // Lấy danh mục theo tab
   const categories =
     activeTab === 'expense' ? expenseCategories : incomeCategories;
 
   // Hàm lưu thông tin giao dịch
   const saveTransaction = () => {
-    if (!selectedSource || !amount) {
+    if (!selectedSource || !amount || !selectedCategory) {
       setErrorMessage('Vui lòng nhập đầy đủ thông tin!');
       return;
     }
 
     const transaction = {
-      date,
+      date: date.toISOString().split('T')[0], // Lưu ngày ở định dạng YYYY-MM-DD
       note,
       source: selectedSource,
       amount: parseFloat(amount),
       type: activeTab,
+      category: selectedCategory, // Thêm danh mục được chọn
     };
 
     addTransaction(
@@ -152,9 +158,22 @@ const App = ({ navigation }) => {
     setSelectedSource(null);
     setNote('');
     setAmount('');
+    setSelectedCategory(null); // Đặt lại danh mục
+    setDate(new Date());
   };
 
-  
+  // Hàm mở DatePicker
+  const showDateSelector = () => {
+    setShowDatePicker(true);
+  };
+
+  // Hàm xử lý khi chọn ngày
+  const onDateChange = (event, selectedDate) => {
+    setShowDatePicker(Platform.OS === 'ios');
+    if (selectedDate) {
+      setDate(selectedDate);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -194,9 +213,17 @@ const App = ({ navigation }) => {
       {/* Date and Input Fields */}
       <View style={styles.inputContainer}>
         <Text style={styles.label}>Ngày</Text>
-        <TouchableOpacity style={styles.datePicker}>
-          <Text>{date}</Text>
+        <TouchableOpacity style={styles.datePicker} onPress={showDateSelector}>
+          <Text>{date.toISOString().split('T')[0]}</Text>
         </TouchableOpacity>
+        {showDatePicker && (
+          <DateTimePicker
+            value={date}
+            mode="date"
+            display="default"
+            onChange={onDateChange}
+          />
+        )}
       </View>
 
       <View style={styles.inputContainer}>
@@ -243,18 +270,18 @@ const App = ({ navigation }) => {
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
           <TouchableOpacity
-            style={styles.categoryItem}
+            style={[
+              styles.categoryItem,
+              item.id === selectedCategory && { borderColor: '#FFA500', borderWidth: 2 },
+            ]}
             onPress={() => {
-              console.log('Danh mục được bấm:', item.name); // Kiểm tra giá trị
-              if (item.name === 'Chỉnh sửa') {
-                console.log('Mở modal');
-                console.log('Modal visible:', isModalVisible);
+              if (item.id !== -1) {
+                setSelectedCategory(item.id);
+              } else {
                 openModal();
-
               }
             }}
           >
-
             <View
               style={[
                 styles.iconPlaceholder,
@@ -263,7 +290,6 @@ const App = ({ navigation }) => {
             />
             <Text style={styles.categoryText}>{item.name}</Text>
           </TouchableOpacity>
-          
         )}
         style={styles.categoryContainer}
       />
