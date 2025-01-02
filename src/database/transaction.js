@@ -12,7 +12,7 @@ export const initializeDatabase = () => {
         date TEXT,
         note TEXT,
         source TEXT,
-        amount REAL,
+        amount INTEGER,
         type TEXT,
         category TEXT
       );`
@@ -22,17 +22,24 @@ export const initializeDatabase = () => {
 
 // Hàm thêm dữ liệu vào bảng transactions
 export const addTransaction = (transaction, successCallback, errorCallback) => {
-  const { date, note, source, amount, type, category } = transaction;
-
   db.transaction((tx) => {
     tx.executeSql(
-      `INSERT INTO transactions (date, note, source, amount, type, category) VALUES (?, ?, ?, ?, ?, ?);`,
-      [date, note, source, parseFloat(amount), type, category],
-      (_, result) => {
-        if (successCallback) successCallback(result);
+      'INSERT INTO transactions (date, note, source, amount, type, category) VALUES (?, ?, ?, ?, ?, ?)',
+      [
+        transaction.date,
+        transaction.note,
+        transaction.source,
+        transaction.amount,
+        transaction.type,
+        transaction.category,
+      ],
+      () => {
+        console.log('Transaction added successfully');
+        successCallback(); // Gọi callback khi thành công
       },
       (error) => {
-        if (errorCallback) errorCallback(error);
+        console.log('Error adding transaction:', error);
+        errorCallback(error); // Gọi callback khi lỗi
       }
     );
   });

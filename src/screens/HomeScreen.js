@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import RNPickerSelect from 'react-native-picker-select';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { loadSources } from '../database/source';
-import { addTransaction, initializeDatabase } from '../database/transaction';
+import { loadSources, updateSourceAmount, getSourceById } from '../database/source';
+import { addTransaction, initializeDatabase  } from '../database/transaction';
 import CategoryModal from './Modal'; // Import Component Modal
 import {
   createCategoryTable,
@@ -126,32 +126,50 @@ const App = ({ navigation }) => {
 
   // Hàm lưu thông tin giao dịch
   const saveTransaction = () => {
-    if (!selectedSource || !amount || !selectedCategory) {
-      setErrorMessage('Vui lòng nhập đầy đủ thông tin!');
-      return;
-    }
+  if (!selectedSource || !amount || !selectedCategory) {
+    setErrorMessage('Vui lòng nhập đầy đủ thông tin!');
+    return;
+  }
 
-    const transaction = {
-      date: date.toISOString().split('T')[0], // Lưu ngày ở định dạng YYYY-MM-DD
-      note,
-      source: selectedSource,
-      amount: parseFloat(amount),
-      type: activeTab,
-      category: selectedCategory, // Thêm danh mục được chọn
-    };
-
-    addTransaction(
-      transaction,
-      () => {
-        setErrorMessage('Thông tin đã được lưu!');
-        resetForm();
-      },
-      (error) => {
-        console.log('Lỗi khi lưu:', error);
-        setErrorMessage('Không thể lưu thông tin. Vui lòng thử lại!');
-      }
-    );
+  const transactionAmount = parseFloat(amount);
+  const transaction = {
+    date: date.toISOString().split('T')[0], // Lưu ngày ở định dạng YYYY-MM-DD
+    note,
+    source: selectedSource,
+    amount: transactionAmount,
+    type: activeTab,
+    category: selectedCategory,
   };
+
+  // Lưu giao dịch vào database
+  addTransaction(
+    transaction,
+    () => {
+      // Sau khi lưu thành công, điều chỉnh số tiền của nguồn
+      getSourceById(selectedSource, (source) => {
+        if (source) {
+          const updatedAmount =
+            activeTab === 'expense'
+              ? source.amount - transactionAmount // Trừ tiền nếu là chi tiêu
+              : source.amount + transactionAmount; // Cộng tiền nếu là thu nhập
+
+          // Cập nhật số tiền mới vào database
+          updateSourceAmount(selectedSource, updatedAmount, () => {
+            setErrorMessage('Giao dịch và nguồn tiền đã được cập nhật!');
+            resetForm();
+          });
+        } else {
+          setErrorMessage('Không tìm thấy nguồn tiền!');
+        }
+      });
+    },
+    (error) => {
+      console.log('Lỗi khi lưu giao dịch:', error);
+      setErrorMessage('Không thể lưu thông tin. Vui lòng thử lại!');
+    }
+  );
+};
+
 
   // Reset form sau khi lưu
   const resetForm = () => {

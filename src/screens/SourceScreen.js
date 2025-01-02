@@ -46,9 +46,15 @@ const App = () => {
       return;
     }
 
-    addSource(selectedSource, parseFloat(amount).toLocaleString() + ' đ', note, () => {
-      loadSourcesList();
-    });
+    addSource(
+      selectedSource,
+      parseInt(amount, 10), // Lưu dưới dạng số nguyên
+      note,
+      () => {
+        loadSourcesList();
+      }
+    );
+
 
     setSelectedSource('');
     setAmount('');

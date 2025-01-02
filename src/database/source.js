@@ -8,7 +8,7 @@ const db = SQLite.openDatabase({ name: 'sources.db', location: 'default' });
 export const createTable = () => {
   db.transaction(tx => {
     tx.executeSql(
-      'CREATE TABLE IF NOT EXISTS sources (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, amount TEXT, note TEXT)',
+      'CREATE TABLE IF NOT EXISTS sources (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, amount INTEGER, note TEXT)',
       [],
       () => {
         console.log('Table created successfully');
@@ -69,6 +69,42 @@ export const deleteSource = (id, callback) => {
       },
       error => {
         console.log('Error deleting data: ', error);
+      }
+    );
+  });
+};
+
+// Cập nhật số tiền của nguồn tiền
+export const updateSourceAmount = (id, newAmount, callback) => {
+  db.transaction(tx => {
+    tx.executeSql(
+      'UPDATE sources SET amount = ? WHERE id = ?',
+      [newAmount.toString(), id],
+      () => {
+        console.log('Source amount updated successfully');
+        callback();
+      },
+      error => {
+        console.log('Error updating source amount: ', error);
+      }
+    );
+  });
+};
+// Lấy thông tin nguồn tiền cụ thể
+export const getSourceById = (id, callback) => {
+  db.transaction(tx => {
+    tx.executeSql(
+      'SELECT * FROM sources WHERE id = ?',
+      [id],
+      (tx, results) => {
+        if (results.rows.length > 0) {
+          callback(results.rows.item(0));
+        } else {
+          callback(null);
+        }
+      },
+      error => {
+        console.log('Lỗi khi lấy nguồn tiền:', error);
       }
     );
   });
