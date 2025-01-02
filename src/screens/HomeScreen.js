@@ -226,6 +226,15 @@ const App = ({ navigation }) => {
       setDate(selectedDate);
     }
   };
+  useEffect(() => {
+    if (errorMessage) {
+      const timer = setTimeout(() => {
+        setErrorMessage(''); // Xóa thông báo sau 2 giây
+      }, 2000);
+
+      return () => clearTimeout(timer); // Dọn dẹp khi component unmount hoặc errorMessage thay đổi
+    }
+  }, [errorMessage]);
 
   return (
     <SafeAreaView style={styles.container}>
