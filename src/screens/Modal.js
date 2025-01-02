@@ -21,13 +21,16 @@ const CategoryModal = ({
 }) => {
   const [errorMessage, setErrorMessage] = useState(''); // Thêm trạng thái thông báo lỗi
 
+  // Lọc danh sách để loại bỏ danh mục "Chỉnh sửa"
+  const filteredCategories = categories.filter((category) => category.id !== -1);
+
   const handleAddCategory = () => {
     if (newCategory.trim() === '') {
       setErrorMessage('Tên danh mục không được để trống!');
       return;
     }
 
-    const isDuplicate = categories.some(
+    const isDuplicate = filteredCategories.some(
       (category) => category.name.toLowerCase() === newCategory.trim().toLowerCase()
     );
 
@@ -56,8 +59,7 @@ const CategoryModal = ({
         ) : null}
 
         <FlatList
-          data={categories}
-          extraData={categories} // Buộc FlatList cập nhật khi state thay đổi
+          data={filteredCategories} // Sử dụng danh sách đã lọc
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => (
             <View style={styles.modalItem}>
@@ -88,6 +90,7 @@ const CategoryModal = ({
     </Modal>
   );
 };
+
 
 const styles = StyleSheet.create({
   modalContainer: {
