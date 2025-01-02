@@ -2,18 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { SafeAreaView, View, Text, StyleSheet, FlatList, TouchableOpacity, Alert } from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import { initializeDatabase, getTransactions, deleteTransaction } from '../database/transaction';
-import { loadAllCategories } from '../database/category';
 
 const CalendarScreen = () => {
   const [selectedDate, setSelectedDate] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [income, setIncome] = useState(0);
   const [expense, setExpense] = useState(0);
-  const [categories, setCategories] = useState({});
 
   useEffect(() => {
     initializeDatabase();
-    loadAllCategories(setCategories);
   }, []);
 
   const calculateTotals = (date) => {
@@ -121,7 +118,7 @@ const CalendarScreen = () => {
             <View style={styles.transactionDetails}>
               <Text style={styles.transactionText}>Ghi chú: {item.note}</Text>
               <Text style={styles.transactionText}>Nguồn: {item.source}</Text>
-              <Text style={styles.transactionText}>Danh mục: {categories[item.category] || 'Không rõ'}</Text>
+              <Text style={styles.transactionText}>Danh mục: {item.category}</Text>
             </View>
             <View style={styles.transactionActions}>
               <Text

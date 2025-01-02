@@ -10,31 +10,20 @@ import {
 import { PieChart } from 'react-native-chart-kit';
 import { Dimensions } from 'react-native';
 import { getTransactions } from '../database/transaction';
-import { loadAllCategories } from '../database/category';
 
 const screenWidth = Dimensions.get('window').width;
 
 const About = () => {
   const [activeTopTab, setActiveTopTab] = useState('monthly'); // Hàng Tháng / Hàng Năm
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [transactions, setTransactions] = useState([]);
-  const [categories, setCategories] = useState({});
   const [expenseCategories, setExpenseCategories] = useState([]);
   const [incomeCategories, setIncomeCategories] = useState([]);
 
-  // Lấy dữ liệu danh mục và giao dịch từ database
-  const fetchInitialData = () => {
-    loadAllCategories((categoriesData) => {
-      setCategories(categoriesData);
-      fetchTransactions(categoriesData);
-    });
-  };
-
-  // Lấy giao dịch từ database và ánh xạ tên danh mục
-  const fetchTransactions = (categoriesData) => {
+  // Lấy giao dịch từ database và nhóm theo danh mục
+  const fetchTransactions = () => {
     getTransactions((data) => {
       const filteredData = filterTransactionsByDate(data, activeTopTab);
-      groupTransactionsByCategory(filteredData, categoriesData);
+      groupTransactionsByCategory(filteredData);
     });
   };
 
@@ -54,8 +43,8 @@ const About = () => {
     });
   };
 
-  // Nhóm giao dịch theo danh mục và ánh xạ tên
-  const groupTransactionsByCategory = (data, categoriesData) => {
+  // Nhóm giao dịch theo danh mục
+  const groupTransactionsByCategory = (data) => {
     const expenseCategories = {};
     const incomeCategories = {};
     let totalExpense = 0;
@@ -63,20 +52,19 @@ const About = () => {
 
     data.forEach((item) => {
       const { category, type, amount } = item;
-      const categoryName = categoriesData[category] || 'Không rõ';
 
       if (type === 'expense') {
         totalExpense += parseFloat(amount);
-        if (!expenseCategories[categoryName]) {
-          expenseCategories[categoryName] = 0;
+        if (!expenseCategories[category]) {
+          expenseCategories[category] = 0;
         }
-        expenseCategories[categoryName] += parseFloat(amount);
+        expenseCategories[category] += parseFloat(amount);
       } else if (type === 'income') {
         totalIncome += parseFloat(amount);
-        if (!incomeCategories[categoryName]) {
-          incomeCategories[categoryName] = 0;
+        if (!incomeCategories[category]) {
+          incomeCategories[category] = 0;
         }
-        incomeCategories[categoryName] += parseFloat(amount);
+        incomeCategories[category] += parseFloat(amount);
       }
     });
 
@@ -115,7 +103,7 @@ const About = () => {
   };
 
   useEffect(() => {
-    fetchInitialData();
+    fetchTransactions();
   }, [activeTopTab, currentDate]);
 
   return (
@@ -171,7 +159,7 @@ const About = () => {
             backgroundColor="transparent"
             paddingLeft="15"
             absolute
-            hasLegend={false} // Tắt chú thích mặc định
+            hasLegend={false}
           />
           <View style={styles.legendContainer}>
             {expenseCategories.map((category, index) => (
@@ -205,7 +193,7 @@ const About = () => {
             backgroundColor="transparent"
             paddingLeft="15"
             absolute
-            hasLegend={false} // Tắt chú thích mặc định
+            hasLegend={false}
           />
           <View style={styles.legendContainer}>
             {incomeCategories.map((category, index) => (

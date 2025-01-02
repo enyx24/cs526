@@ -130,15 +130,17 @@ const App = ({ navigation }) => {
     setErrorMessage('Vui lòng nhập đầy đủ thông tin!');
     return;
   }
-
+  const source = sources.find((item) => item.value === selectedSource);
+  // Tìm tên danh mục từ danh sách categories
+  const category = categories.find((item) => item.id === selectedCategory);
   const transactionAmount = parseInt(amount);
   const transaction = {
     date: date.toISOString().split('T')[0], // Lưu ngày ở định dạng YYYY-MM-DD
     note,
-    source: selectedSource,
+    source: source.label,
     amount: transactionAmount,
     type: activeTab,
-    category: selectedCategory,
+    category: category.name,
   };
 
   // Lưu giao dịch vào database
