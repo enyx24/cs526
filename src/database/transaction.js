@@ -96,4 +96,25 @@ export const deleteTransaction = (id, successCallback, errorCallback) => {
   });
 };
 
+// Thêm hàm getTransactions vào transaction.js
+export const getTransactions = (callback) => {
+  db.transaction((tx) => {
+    tx.executeSql(
+      `SELECT * FROM transactions;`,
+      [],
+      (_, result) => {
+        const rows = result.rows;
+        let transactions = [];
+        for (let i = 0; i < rows.length; i++) {
+          transactions.push(rows.item(i));
+        }
+        callback(transactions);
+      },
+      (error) => {
+        console.log('Lỗi khi lấy dữ liệu:', error);
+      }
+    );
+  });
+};
+
 export default db;

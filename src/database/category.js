@@ -109,3 +109,24 @@ export const deleteCategory = (id, callback) => {
     );
   });
 };
+
+export const loadAllCategories = (callback) => {
+  db.transaction(tx => {
+    tx.executeSql(
+      'SELECT * FROM categories',
+      [],
+      (tx, results) => {
+        let categories = {};
+        for (let i = 0; i < results.rows.length; i++) {
+          const item = results.rows.item(i);
+          categories[item.id] = item.name;
+        }
+        callback(categories);
+      },
+      error => {
+        console.log('Error fetching all categories: ', error);
+      }
+    );
+  });
+};
+
