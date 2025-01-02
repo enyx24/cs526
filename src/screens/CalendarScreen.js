@@ -1,11 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { SafeAreaView, View, Text, StyleSheet, FlatList, TouchableOpacity, Alert } from 'react-native';
+import {
+  SafeAreaView,
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  Alert,
+  TextInput,
+} from 'react-native';
 import { Calendar } from 'react-native-calendars';
-import { initializeDatabase, getTransactions, deleteTransaction } from '../database/transaction';
+import {
+  initializeDatabase,
+  getTransactions,
+  deleteTransaction,
+} from '../database/transaction';
 
 const CalendarScreen = () => {
   const [selectedDate, setSelectedDate] = useState(null);
   const [transactions, setTransactions] = useState([]);
+  const [filteredTransactions, setFilteredTransactions] = useState([]); // Danh sách giao dịch sau khi tìm kiếm
+  const [searchQuery, setSearchQuery] = useState(''); // Từ khóa tìm kiếm
   const [income, setIncome] = useState(0);
   const [expense, setExpense] = useState(0);
 
@@ -33,12 +48,14 @@ const CalendarScreen = () => {
       setIncome(totalIncome);
       setExpense(totalExpense);
       setTransactions(filteredTransactions);
+      setFilteredTransactions(filteredTransactions); // Cập nhật danh sách ban đầu
     });
   };
 
   const onDayPress = (day) => {
     setSelectedDate(day.dateString);
     calculateTotals(day.dateString);
+    setSearchQuery(''); // Reset từ khóa tìm kiếm khi chọn ngày mới
   };
 
   const handleDeleteTransaction = (id) => {
@@ -66,6 +83,23 @@ const CalendarScreen = () => {
         },
       ]
     );
+  };
+
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+
+    if (query.trim() === '') {
+      setFilteredTransactions(transactions); // Hiển thị toàn bộ giao dịch nếu không có từ khóa
+    } else {
+      const lowerCaseQuery = query.toLowerCase();
+      const filtered = transactions.filter(
+        (transaction) =>
+          transaction.note.toLowerCase().includes(lowerCaseQuery) ||
+          transaction.source.toLowerCase().includes(lowerCaseQuery) ||
+          transaction.category.toLowerCase().includes(lowerCaseQuery)
+      );
+      setFilteredTransactions(filtered);
+    }
   };
 
   return (
@@ -110,8 +144,16 @@ const CalendarScreen = () => {
         </View>
       </View>
 
+      {/* Ô tìm kiếm */}
+      <TextInput
+        style={styles.searchInput}
+        placeholder="Tìm kiếm giao dịch..."
+        value={searchQuery}
+        onChangeText={handleSearch}
+      />
+
       <FlatList
-        data={transactions}
+        data={filteredTransactions}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
           <View style={styles.transactionItem}>
@@ -191,6 +233,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: '#FF5722',
+  },
+  searchInput: {
+    margin: 16,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    borderRadius: 8,
+    backgroundColor: '#FFFFFF',
+    fontSize: 16,
   },
   transactionItem: {
     flexDirection: 'row',
