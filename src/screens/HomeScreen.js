@@ -4,6 +4,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { loadSources, updateSourceAmount, getSourceById } from '../database/source';
 import { addTransaction, initializeDatabase  } from '../database/transaction';
 import CategoryModal from './Modal'; // Import Component Modal
+import { useFocusEffect } from '@react-navigation/native'; // Import useFocusEffect
 import {
   createCategoryTable,
   loadExpenseCategories,
@@ -50,6 +51,37 @@ const App = ({ navigation }) => {
   const [expenseCategories, setExpenseCategories] = useState([]); // Danh mục chi tiêu
   const [incomeCategories, setIncomeCategories] = useState([]); // Danh mục thu nhập
   const [selectedCategory, setSelectedCategory] = useState(null); // Danh mục được chọn
+  useFocusEffect(
+  React.useCallback(() => {
+    // Hàm này sẽ được gọi mỗi khi tab được chọn
+    console.log('Tab is focused, reloading data...');
+    
+    // Ví dụ: tải lại danh mục hoặc dữ liệu khác
+    loadSources((data) => {
+      const formattedData = data.map((item) => ({
+        label: item.name,
+        value: item.id,
+      }));
+      setSources(formattedData);
+    });
+
+    loadExpenseCategories((categories) => {
+      setExpenseCategories([...categories, { id: -1, name: 'Chỉnh sửa' }]);
+    });
+
+    loadIncomeCategories((categories) => {
+      setIncomeCategories([...categories, { id: -1, name: 'Chỉnh sửa' }]);
+    });
+
+    // Reset form nếu cần
+    resetForm();
+
+    // Cleanup logic nếu cần
+    return () => {
+      console.log('Tab is unfocused');
+    };
+  }, []) // Không cần dependencies trừ khi có giá trị thay đổi
+);
 
   // Hàm mở Modal
   const openModal = () => {
