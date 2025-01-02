@@ -131,7 +131,7 @@ const App = ({ navigation }) => {
     return;
   }
 
-  const transactionAmount = parseFloat(amount);
+  const transactionAmount = parseInt(amount);
   const transaction = {
     date: date.toISOString().split('T')[0], // Lưu ngày ở định dạng YYYY-MM-DD
     note,
@@ -151,7 +151,7 @@ const App = ({ navigation }) => {
           const updatedAmount =
             activeTab === 'expense'
               ? source.amount - transactionAmount // Trừ tiền nếu là chi tiêu
-              : source.amount + transactionAmount; // Cộng tiền nếu là thu nhập
+              : parseInt(source.amount) + transactionAmount; // Cộng tiền nếu là thu nhập
 
           // Cập nhật số tiền mới vào database
           updateSourceAmount(selectedSource, updatedAmount, () => {
