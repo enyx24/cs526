@@ -7,6 +7,7 @@ import {
   FlatList,
   StyleSheet,
   TextInput,
+  Alert
 } from 'react-native';
 import RNPickerSelect from 'react-native-picker-select';
 import { createTable, addSource, loadSources, deleteSource } from '../database/source';
@@ -68,9 +69,26 @@ const App = () => {
 
   // Hàm xóa nguồn tiền
   const handleDeleteSource = (id) => {
-    deleteSource(id, () => {
-      loadSourcesList();
-    });
+    Alert.alert(
+      "Xác nhận xóa",
+      "Bạn có chắc chắn muốn xóa nguồn tiền này không?",
+      [
+        {
+          text: "Hủy",
+          onPress: () => console.log("Hủy xóa"), // Nhật ký khi người dùng hủy
+          style: "cancel",
+        },
+        {
+          text: "Có",
+          onPress: () => {
+            deleteSource(id, () => {
+              loadSourcesList(); // Tải lại danh sách sau khi xóa
+            });
+          },
+        },
+      ],
+      { cancelable: true }
+    );
   };
 
   const renderItem = ({ item }) => (
