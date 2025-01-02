@@ -68,50 +68,96 @@ const CategoryModal = ({
 const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.8)', // Màu nền tối hơn với độ mờ
     justifyContent: 'center',
     alignItems: 'center',
+    paddingHorizontal: 20, // Thêm khoảng cách ngang
   },
   modalTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 'bold',
-    marginBottom: 16,
+    marginBottom: 20,
     color: '#FFFFFF',
+    textAlign: 'center', // Căn giữa tiêu đề
   },
   modalItem: {
-    backgroundColor: '#FFF',
+    backgroundColor: '#FFFFFF',
     padding: 16,
     marginVertical: 8,
-    borderRadius: 8,
+    borderRadius: 10, // Góc bo tròn hơn
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'space-between', // Căn đều giữa tên và nút xóa
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3, // Hiệu ứng nổi cho Android
   },
   textInput: {
-    width: '80%',
-    padding: 10,
+    width: '100%',
+    padding: 12,
     backgroundColor: '#FFFFFF',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
-    marginBottom: 16,
+    borderColor: '#DDD',
+    marginBottom: 20,
+    fontSize: 16, // Cỡ chữ lớn hơn
+    color: '#333', // Màu chữ tối hơn
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    shadowOffset: { width: 0, height: 1 },
+    elevation: 2,
   },
   addButton: {
-    backgroundColor: '#FFA500',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
+    backgroundColor: '#4CAF50', // Màu xanh lá cho nút thêm
+    paddingVertical: 12,
+    paddingHorizontal: 24,
     borderRadius: 8,
     marginBottom: 16,
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 4,
   },
   addButtonText: {
     color: '#FFFFFF',
     fontWeight: 'bold',
+    fontSize: 16, // Cỡ chữ lớn hơn
+    textAlign: 'center',
+  },
+  deleteButton: {
+    backgroundColor: '#FF5252', // Màu đỏ cho nút xóa
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+  },
+  deleteButtonText: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    fontSize: 14, // Cỡ chữ nhỏ hơn một chút
+    textAlign: 'center',
   },
   closeButton: {
-    backgroundColor: '#E0E0E0',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
+    backgroundColor: '#607D8B', // Màu xanh xám cho nút đóng
+    paddingVertical: 12,
+    paddingHorizontal: 24,
     borderRadius: 8,
+    marginTop: 8,
+    shadowColor: '#000',
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
   },
   closeButtonText: {
-    color: '#000',
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    fontSize: 16, // Cỡ chữ lớn hơn
+    textAlign: 'center',
   },
 });
 
