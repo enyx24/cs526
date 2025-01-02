@@ -1,4 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import RNPickerSelect from 'react-native-picker-select';
+import { loadSources } from '../database/source';
+import { addTransaction, initializeDatabase } from '../database/transaction';
+import CategoryModal from './Modal'; // Import Component Modal
+import {
+  createCategoryTable,
+  loadExpenseCategories,
+  loadIncomeCategories,
+} from '../database/category'; // Import các hàm load danh mục
 import {
   SafeAreaView,
   View,
@@ -7,43 +16,129 @@ import {
   TouchableOpacity,
   StyleSheet,
   FlatList,
+  Modal
 } from 'react-native';
 
-// Dữ liệu danh mục
-const expenseCategories = [
-  { id: 1, name: 'Ăn uống' },
-  { id: 2, name: 'Chi tiêu hàng ngày' },
-  { id: 3, name: 'Quần áo' },
-  { id: 4, name: 'Mỹ phẩm' },
-  { id: 5, name: 'Phí giao lưu' },
-  { id: 6, name: 'Y tế' },
-  { id: 7, name: 'Giáo dục' },
-  { id: 8, name: 'Tiền điện' },
-  { id: 9, name: 'Đi lại' },
-  { id: 10, name: 'Phí liên lạc' },
-  { id: 11, name: 'Tiền nhà' },
-  { id: 12, name: 'Chỉnh sửa >' },
-];
-
-const incomeCategories = [
-  { id: 1, name: 'Tiền lương' },
-  { id: 2, name: 'Tiền phụ cấp' },
-  { id: 3, name: 'Tiền thưởng' },
-  { id: 4, name: 'Thu nhập phụ' },
-  { id: 5, name: 'Đầu tư' },
-  { id: 6, name: 'Thu nhập tạm thời' },
-  { id: 7, name: 'Chỉnh sửa >' },
-];
-
-const App = () => {
+const App = ({ navigation }) => {
   const [activeTab, setActiveTab] = useState('expense'); // Quản lý tab đang chọn
+  const [isModalVisible, setIsModalVisible] = useState(false); // Trạng thái Modal
+  const [newCategory, setNewCategory] = useState(''); // Thêm danh mục mới
+  const [sources, setSources] = useState([]);
+  const [selectedSource, setSelectedSource] = useState(null);
+  const [note, setNote] = useState('');
+  const [amount, setAmount] = useState('');
+  const [date, setDate] = useState('01/01/2025'); // Mặc định ngày hiện tại
+  const [errorMessage, setErrorMessage] = useState('');
+  const [expenseCategories, setExpenseCategories] = useState([]); // Danh mục chi tiêu
+  const [incomeCategories, setIncomeCategories] = useState([]); // Danh mục thu nhập
+  // Hàm mở Modal
+  const openModal = () => {
+    setIsModalVisible(true);
+  };
+
+  // Hàm đóng Modal
+  const closeModal = () => {
+    setIsModalVisible(false);
+  };
+  // Hàm thêm danh mục mới
+  const addCategory = () => {
+    if (newCategory.trim() === '') return;
+
+    
+    if (activeTab === 'expense') {
+      const newCategoryItem = { id: Date.now(), name: newCategory, type: 0 };
+      setExpenseCategories([...expenseCategories, newCategoryItem]);
+    } else {
+      const newCategoryItem = { id: Date.now(), name: newCategory, type: 1 };
+      setIncomeCategories([...incomeCategories, newCategoryItem]);
+    }
+    setNewCategory('');
+  };
+  const deleteCategory = (id) => {
+  if (activeTab === 'expense') {
+    // Xóa khỏi danh mục chi tiêu
+    const updatedCategories = expenseCategories.filter((item) => item.id !== id);
+    setExpenseCategories(updatedCategories);
+  } else {
+    // Xóa khỏi danh mục thu nhập
+    const updatedCategories = incomeCategories.filter((item) => item.id !== id);
+    setIncomeCategories(updatedCategories);
+  }
+};
+
+  // Gọi hàm tạo bảng khi ứng dụng khởi động
+  useEffect(() => {
+    createCategoryTable();
+    initializeDatabase();
+  }, []);
+
+  useEffect(() => {
+    // Tải danh sách nguồn tiền khi component được mount
+    loadSources((data) => {
+      const formattedData = data.map((item) => ({
+        label: item.name,
+        value: item.id,
+      }));
+      setSources(formattedData);
+    });
+
+    // Tải danh mục chi tiêu
+    loadExpenseCategories((categories) => {
+      setExpenseCategories([...categories, { id: -1, name: 'Chỉnh sửa' }]);
+    });
+
+    // Tải danh mục thu nhập
+    loadIncomeCategories((categories) => {
+      setIncomeCategories([...categories, { id: -1, name: 'Chỉnh sửa' }]);
+    });
+  }, []);
 
   // Lấy danh mục theo tab
   const categories =
     activeTab === 'expense' ? expenseCategories : incomeCategories;
 
+  // Hàm lưu thông tin giao dịch
+  const saveTransaction = () => {
+    if (!selectedSource || !amount) {
+      setErrorMessage('Vui lòng nhập đầy đủ thông tin!');
+      return;
+    }
+
+    const transaction = {
+      date,
+      note,
+      source: selectedSource,
+      amount: parseFloat(amount),
+      type: activeTab,
+    };
+
+    addTransaction(
+      transaction,
+      () => {
+        setErrorMessage('Thông tin đã được lưu!');
+        resetForm();
+      },
+      (error) => {
+        console.log('Lỗi khi lưu:', error);
+        setErrorMessage('Không thể lưu thông tin. Vui lòng thử lại!');
+      }
+    );
+  };
+
+  // Reset form sau khi lưu
+  const resetForm = () => {
+    setSelectedSource(null);
+    setNote('');
+    setAmount('');
+  };
+
+  
+
   return (
     <SafeAreaView style={styles.container}>
+      {errorMessage ? (
+        <Text style={{ color: 'red', marginBottom: 16 }}>{errorMessage}</Text>
+      ) : null}
       {/* Tabs */}
       <View style={styles.tabContainer}>
         <TouchableOpacity
@@ -78,22 +173,35 @@ const App = () => {
       <View style={styles.inputContainer}>
         <Text style={styles.label}>Ngày</Text>
         <TouchableOpacity style={styles.datePicker}>
-          <Text>01/01/2025 (Th 4)</Text>
+          <Text>{date}</Text>
         </TouchableOpacity>
       </View>
 
       <View style={styles.inputContainer}>
         <Text style={styles.label}>Ghi chú</Text>
-        <TextInput style={styles.textInput} placeholder="Chưa nhập vào" />
+        <TextInput
+          style={styles.textInput}
+          placeholder="Nhập ghi chú"
+          value={note}
+          onChangeText={(text) => setNote(text)}
+        />
       </View>
 
-      <View style={styles.inputContainer}>
+      <View>
         <Text style={styles.label}>
           {activeTab === 'expense' ? 'Nguồn chi' : 'Nguồn thu'}
         </Text>
-        <TextInput style={styles.textInput} placeholder="Chưa nhập vào" />
+        <RNPickerSelect
+          onValueChange={(value) => setSelectedSource(value)}
+          value={selectedSource}
+          items={sources.length > 0 ? sources : []}
+          placeholder={{
+            label: 'Chọn nguồn',
+            value: null,
+          }}
+          style={styles.pickerInput}
+        />
       </View>
-
       <View style={styles.inputContainer}>
         <Text style={styles.label}>
           {activeTab === 'expense' ? 'Tiền chi' : 'Tiền thu'}
@@ -102,25 +210,53 @@ const App = () => {
           style={styles.textInput}
           placeholder="0"
           keyboardType="numeric"
+          value={amount}
+          onChangeText={(text) => setAmount(text)}
         />
       </View>
-
       {/* Categories */}
       <FlatList
         data={categories}
         numColumns={3}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
-          <View style={styles.categoryItem}>
-            <View style={styles.iconPlaceholder} />
+          <TouchableOpacity
+            style={styles.categoryItem}
+            onPress={() => {
+              console.log('Danh mục được bấm:', item.name); // Kiểm tra giá trị
+              if (item.name === 'Chỉnh sửa') {
+                console.log('Mở modal');
+                console.log('Modal visible:', isModalVisible);
+                openModal();
+
+              }
+            }}
+          >
+
+            <View
+              style={[
+                styles.iconPlaceholder,
+                item.id === -1 && { backgroundColor: '#FFA500' },
+              ]}
+            />
             <Text style={styles.categoryText}>{item.name}</Text>
-          </View>
+          </TouchableOpacity>
+          
         )}
         style={styles.categoryContainer}
       />
-
+      {/* Modal quản lý danh mục */}
+      <CategoryModal
+        isVisible={isModalVisible}
+        closeModal={closeModal}
+        categories={categories}
+        newCategory={newCategory}
+        setNewCategory={setNewCategory}
+        addCategory={addCategory}
+        deleteCategory={deleteCategory}
+      />
       {/* Submit Button */}
-      <TouchableOpacity style={styles.submitButton}>
+      <TouchableOpacity style={styles.submitButton} onPress={saveTransaction}>
         <Text style={styles.submitText}>
           {activeTab === 'expense' ? 'Nhập khoản chi' : 'Nhập khoản thu'}
         </Text>
@@ -185,6 +321,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E0E0E0',
   },
+  submitButton: {
+    paddingVertical: 12,
+    backgroundColor: '#FFA500',
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  submitText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
   categoryContainer: {
     marginBottom: 16,
   },
@@ -203,17 +350,6 @@ const styles = StyleSheet.create({
   categoryText: {
     textAlign: 'center',
     fontSize: 14,
-  },
-  submitButton: {
-    paddingVertical: 12,
-    backgroundColor: '#FFA500',
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  submitText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: 'bold',
   },
 });
 
