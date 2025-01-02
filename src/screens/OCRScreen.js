@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, Button, Image, ScrollView, PermissionsAndroid, Platform, Alert } from 'react-native';
+import { View, Text, Button, Image, ScrollView, PermissionsAndroid, Platform, Alert, Dimensions, TouchableOpacity } from 'react-native';
 import MlkitOcr from 'react-native-mlkit-ocr';
 import { launchImageLibrary } from 'react-native-image-picker';
+
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window'); // Lấy chiều rộng và chiều cao màn hình
+
+const results = [];
 
 // Hàm yêu cầu quyền truy cập ảnh
 const requestStoragePermission = async () => {
@@ -44,6 +48,7 @@ const OCRScreen = () => {
   const [images, setImages] = useState([]);
   const [ocrResults, setOcrResults] = useState([]);
   const [extractedInfo, setExtractedInfo] = useState([]);
+  const [zoomedImage, setZoomedImage] = useState(null); // Trạng thái lưu ảnh đang được phóng to
 
   // Regex patterns
   const regexMoney = /(\b(?:VND\s*)?\d{1,3}(?:[.,]\d{3})*(?:\s*(?:VNĐ|đ|đồng|\sVNĐ|\sVND|VND|d|\sd)))/g;
@@ -61,7 +66,6 @@ const OCRScreen = () => {
     launchImageLibrary({ selectionLimit: 0, mediaType: 'photo' }, response => {
       if (response.didCancel) {
         console.log('User cancelled image picker');
-        Alert.alert('Hủy chọn ảnh', 'Bạn đã hủy việc chọn ảnh.');
       } else if (response.errorCode) {
         console.error('ImagePicker Error:', response.errorMessage);
         Alert.alert('Lỗi', `Không thể chọn ảnh: ${response.errorMessage}`);
@@ -75,7 +79,6 @@ const OCRScreen = () => {
   const performOCR = async (imageUri) => {
     try {
       const result = await MlkitOcr.detectFromUri(imageUri);
-      // console.log(`OCR result for ${imageUri}:`, result);
       return result;
     } catch (error) {
       console.error('OCR Error:', error);
@@ -87,7 +90,6 @@ const OCRScreen = () => {
   const removeSpacesBetweenNumbers = (input) => {
     return input.replace(/(\d)\s+(\d)/g, '$1$2');
   };
-  
 
   const handleOCRButtonPress = async () => {
     if (images.length === 0) {
@@ -95,7 +97,6 @@ const OCRScreen = () => {
       return;
     }
 
-    const results = [];
     const extractedData = [];
 
     for (let image of images) {
@@ -115,66 +116,90 @@ const OCRScreen = () => {
       const extractedTime = text.match(regexTime);
       const extractedDate = text.match(regexDate);
 
-      console.log('Số tiền:', extractedMoney[0]);
-      console.log('Người gửi và người nhận:', extractedSenderReceiver);
-      console.log('Thời gian:', extractedTime[(extractedTime.length == 1)? 0 : 1]);
-      console.log('Ngày:', extractedDate[0]);
-
-      // Lưu kết quả trích xuất vào state
       extractedData.push({
-        money: extractedMoney,
-        senderReceiver: extractedSenderReceiver,
-        time: extractedTime,
+        money: extractedMoney ? extractedMoney[0] : 'Không tìm thấy',
+        senderReceiver: extractedSenderReceiver ? extractedSenderReceiver[0] : 'Không tìm thấy',
+        time: (extractedTime[(extractedTime.length == 1)? 0 : 1]) ? (extractedTime[(extractedTime.length == 1)? 0 : 1]) : 'Không tìm thấy',
+        date: extractedDate ? extractedDate[0] : 'Không tìm thấy',
       });
     }
 
-    setOcrResults(results);
     setExtractedInfo(extractedData);  // Cập nhật thông tin trích xuất
+    results = results.push(extractedData)
     Alert.alert('OCR Hoàn tất', 'Đã xử lý tất cả các ảnh.');
   };
 
+  const handleLongPress = (imageUri) => {
+    // Khi nhấn giữ, phóng to ảnh ra vừa màn hình
+    setZoomedImage(imageUri);
+  };
+
+  const handleCloseZoom = () => {
+    setZoomedImage(null); // Đóng chế độ phóng to
+  };
+
   return (
-    <ScrollView contentContainerStyle={{ padding: 20 }}>
-      <Button title="Chọn ảnh" onPress={selectImages} />
-      <Button title="Thực hiện OCR" onPress={handleOCRButtonPress} />
-      
-      <View style={{ marginTop: 20 }}>
-        {ocrResults.length > 0 && (
-          <Text>OCR Kết quả:</Text>
-        )}
-        {ocrResults.map((result, index) => (
-          <View key={index} style={{ marginTop: 10 }}>
-            <Text>{`Kết quả ảnh ${index + 1}:`}</Text>
-            {result.map((item, subIndex) => (
-              <Text key={subIndex}>{item.text}</Text>
-            ))}
-          </View>
-        ))}
-      </View>
-
-      <View style={{ marginTop: 20 }}>
-        {extractedInfo.length > 0 && (
-          <Text>Thông tin trích xuất:</Text>
-        )}
-        {extractedInfo.map((info, index) => (
-          <View key={index} style={{ marginTop: 10 }}>
-            <Text>{`Kết quả ảnh ${index + 1}:`}</Text>
-            {info.money && <Text>Số tiền: {info.money}</Text>}
-            {info.senderReceiver && <Text>Người gửi/nhận: {info.senderReceiver}</Text>}
-            {info.time && <Text>Thời gian: {info.time}</Text>}
-          </View>
-        ))}
-      </View>
-
-      <View style={{ marginTop: 20 }}>
-        {images.length > 0 && (
-          <Text>Ảnh đã chọn:</Text>
-        )}
+    <>
+      <ScrollView 
+        horizontal={true} 
+        pagingEnabled={true} 
+        contentContainerStyle={{ flexGrow: 1 }} 
+        showsHorizontalScrollIndicator={false}
+      >
         {images.map((image, index) => (
-          <Image key={index} source={{ uri: image.uri }} style={{ width: 100, height: 100, margin: 5 }} />
+          <View
+            key={index}
+            style={{
+              width: screenWidth,
+              padding: 20,
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}
+          >
+            {/* Hiển thị ảnh với tính năng nhấn giữ */}
+            <TouchableOpacity 
+              onLongPress={() => handleLongPress(image.uri)} // Khi nhấn giữ
+            >
+              <Image
+                source={{ uri: image.uri }}
+                style={{
+                  width: zoomedImage === image.uri ? screenWidth*0.8 : 300, // Phóng to ảnh nếu được chọn
+                  height: zoomedImage === image.uri ? screenHeight*0.8 : 300, // Phóng to ảnh nếu được chọn
+                  marginBottom: 20,
+                }}
+                resizeMode="contain"
+              />
+            </TouchableOpacity>
+
+            {/* Nếu có ảnh đang phóng to thì hiển thị thông tin đóng */}
+            {zoomedImage && (
+              <View style={{ bottom: 40, flexDirection: 'row', justifyContent: 'center', width: '100%', alignItems: 'center' }}>
+                <Button title="Đóng" onPress={handleCloseZoom} style={{ flex: 1 }} />
+              </View>
+            )}
+
+            {/* Hiển thị thông tin trích xuất */}
+            <View style={{ marginTop: 20, width: '100%' }}>
+              <Text style={{ fontWeight: 'bold', marginTop: 20 }}>Thông tin trích xuất:</Text>
+              {extractedInfo[index]?.money && <Text>Số tiền: {extractedInfo[index].money}</Text>}
+              {extractedInfo[index]?.senderReceiver && <Text>Người gửi/nhận: {extractedInfo[index].senderReceiver}</Text>}
+              {extractedInfo[index]?.time && <Text>Thời gian: {extractedInfo[index].time}</Text>}
+              {extractedInfo[index]?.date && <Text>Ngày: {extractedInfo[index].date}</Text>}
+            </View>
+          </View>
         ))}
-      </View>
-    </ScrollView>
+      </ScrollView>
+      {!zoomedImage && (
+        <View style={{ bottom: 30, flexDirection: 'row', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
+          <View style={{ flex: 1, marginLeft: 20, marginRight: 20 }}>
+            <Button title="Chọn ảnh" onPress={selectImages} />
+          </View>
+          <View style={{ flex: 1, marginLeft: 20, marginRight: 20 }}>
+            <Button title="Thực hiện OCR" onPress={handleOCRButtonPress} />
+          </View>
+        </View>
+      )}
+    </>
   );
 };
 
