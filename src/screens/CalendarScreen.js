@@ -1,22 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { SafeAreaView, View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { SafeAreaView, View, Text, StyleSheet, FlatList, TouchableOpacity, Alert } from 'react-native';
 import { Calendar } from 'react-native-calendars';
-import { initializeDatabase, getTransactions } from '../database/transaction';
+import { initializeDatabase, getTransactions, deleteTransaction } from '../database/transaction';
 import { loadAllCategories } from '../database/category';
+
 const CalendarScreen = () => {
   const [selectedDate, setSelectedDate] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [income, setIncome] = useState(0);
   const [expense, setExpense] = useState(0);
-  const [categories, setCategories] = useState({}); // Lưu tên danh mục
+  const [categories, setCategories] = useState({});
+
   useEffect(() => {
     initializeDatabase();
+    loadAllCategories(setCategories);
   }, []);
-  useEffect(() => {
-    initializeDatabase();
-    loadAllCategories(setCategories); // Tải tất cả tên danh mục
-  }, []);
-  // Hàm tính tổng thu nhập và chi tiêu theo ngày
+
   const calculateTotals = (date) => {
     getTransactions((allTransactions) => {
       const filteredTransactions = allTransactions.filter(
@@ -40,20 +39,44 @@ const CalendarScreen = () => {
     });
   };
 
-  // Hàm xử lý khi ngày được chọn
   const onDayPress = (day) => {
     setSelectedDate(day.dateString);
     calculateTotals(day.dateString);
   };
 
+  const handleDeleteTransaction = (id) => {
+    Alert.alert(
+      'Xác nhận xóa',
+      'Bạn có chắc chắn muốn xóa giao dịch này?',
+      [
+        { text: 'Hủy', style: 'cancel' },
+        {
+          text: 'Xóa',
+          style: 'destructive',
+          onPress: () => {
+            deleteTransaction(
+              id,
+              () => {
+                Alert.alert('Thành công', 'Giao dịch đã được xóa');
+                calculateTotals(selectedDate);
+              },
+              (error) => {
+                Alert.alert('Lỗi', 'Không thể xóa giao dịch');
+                console.error(error);
+              }
+            );
+          },
+        },
+      ]
+    );
+  };
+
   return (
     <SafeAreaView style={styles.container}>
-      {/* Tiêu đề */}
       <View style={styles.header}>
         <Text style={styles.title}>Lịch</Text>
       </View>
 
-      {/* Lịch */}
       <Calendar
         current={new Date().toISOString().split('T')[0]}
         markedDates={{
@@ -71,7 +94,6 @@ const CalendarScreen = () => {
         }}
       />
 
-      {/* Tóm tắt thu nhập và chi tiêu */}
       <View style={styles.summaryContainer}>
         <View style={styles.summaryItem}>
           <Text style={styles.summaryLabel}>Thu nhập</Text>
@@ -91,7 +113,6 @@ const CalendarScreen = () => {
         </View>
       </View>
 
-      {/* Danh sách giao dịch */}
       <FlatList
         data={transactions}
         keyExtractor={(item) => item.id.toString()}
@@ -102,15 +123,20 @@ const CalendarScreen = () => {
               <Text style={styles.transactionText}>Nguồn: {item.source}</Text>
               <Text style={styles.transactionText}>Danh mục: {categories[item.category] || 'Không rõ'}</Text>
             </View>
-            <Text
-              style={
-                item.type === 'income'
-                  ? styles.income
-                  : styles.expense
-              }
-            >
-              {item.amount.toLocaleString('vi-VN')}đ
-            </Text>
+            <View style={styles.transactionActions}>
+              <Text
+                style={
+                  item.type === 'income'
+                    ? styles.income
+                    : styles.expense
+                }
+              >
+                {item.amount.toLocaleString('vi-VN')}đ
+              </Text>
+              <TouchableOpacity onPress={() => handleDeleteTransaction(item.id)}>
+                <Text style={styles.deleteButton}>Xóa</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         )}
         ListEmptyComponent={() => (
@@ -183,6 +209,16 @@ const styles = StyleSheet.create({
   transactionText: {
     fontSize: 14,
     color: '#333333',
+  },
+  transactionActions: {
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+  },
+  deleteButton: {
+    marginTop: 8,
+    color: '#FF5722',
+    fontSize: 14,
+    fontWeight: 'bold',
   },
   emptyText: {
     textAlign: 'center',
