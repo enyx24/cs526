@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, Button, Image, ScrollView, PermissionsAndroid, Platform, Alert, Dimensions, TouchableOpacity } from 'react-native';
+import { View, Text, Button, Image, ScrollView, PermissionsAndroid, Platform, Alert, Dimensions, TouchableOpacity, TextInput, useEffect } from 'react-native';
 import MlkitOcr from 'react-native-mlkit-ocr';
 import { launchImageLibrary } from 'react-native-image-picker';
 
@@ -117,10 +117,10 @@ const OCRScreen = () => {
       const extractedDate = text.match(regexDate);
 
       extractedData.push({
-        money: extractedMoney ? extractedMoney[0] : 'Không tìm thấy',
-        senderReceiver: extractedSenderReceiver ? extractedSenderReceiver[0] : 'Không tìm thấy',
-        time: (extractedTime[(extractedTime.length == 1)? 0 : 1]) ? (extractedTime[(extractedTime.length == 1)? 0 : 1]) : 'Không tìm thấy',
-        date: extractedDate ? extractedDate[0] : 'Không tìm thấy',
+        money: extractedMoney ? extractedMoney[0] : '',
+        senderReceiver: extractedSenderReceiver ? extractedSenderReceiver[0] : '',
+        time: (extractedTime[(extractedTime.length == 1)? 0 : 1]) ? (extractedTime[(extractedTime.length == 1)? 0 : 1]) : '',
+        date: extractedDate ? extractedDate[0] : '',
       });
     }
 
@@ -180,12 +180,78 @@ const OCRScreen = () => {
 
             {/* Hiển thị thông tin trích xuất */}
             <View style={{ marginTop: 20, width: '100%' }}>
-              <Text style={{ fontWeight: 'bold', marginTop: 20 }}>Thông tin trích xuất:</Text>
-              {extractedInfo[index]?.money && <Text>Số tiền: {extractedInfo[index].money}</Text>}
-              {extractedInfo[index]?.senderReceiver && <Text>Người gửi/nhận: {extractedInfo[index].senderReceiver}</Text>}
-              {extractedInfo[index]?.time && <Text>Thời gian: {extractedInfo[index].time}</Text>}
-              {extractedInfo[index]?.date && <Text>Ngày: {extractedInfo[index].date}</Text>}
+              {/* <Text style={{ fontWeight: 'bold', marginTop: 20 }}>Thông tin trích xuất:</Text> */}
+              {extractedInfo[index]?.money && (
+                <TextInput
+                  style={{
+                    borderWidth: 1,
+                    borderColor: '#ccc',
+                    padding: 10,
+                    borderRadius: 5,
+                    marginBottom: 10,
+                  }}
+                  value={extractedInfo[index].money}
+                  onChangeText={(text) => {
+                    // Cập nhật thông tin trong mảng extractedInfo
+                    const updatedInfo = [...extractedInfo];
+                    updatedInfo[index].money = text;
+                    setExtractedInfo(updatedInfo);
+                  }}
+                />
+              )}
+              {extractedInfo[index]?.senderReceiver && (
+                <TextInput
+                  style={{
+                    borderWidth: 1,
+                    borderColor: '#ccc',
+                    padding: 10,
+                    borderRadius: 5,
+                    marginBottom: 10,
+                  }}
+                  value={extractedInfo[index].senderReceiver}
+                  onChangeText={(text) => {
+                    const updatedInfo = [...extractedInfo];
+                    updatedInfo[index].senderReceiver = text;
+                    setExtractedInfo(updatedInfo);
+                  }}
+                />
+              )}
+              {extractedInfo[index]?.time && (
+                <TextInput
+                  style={{
+                    borderWidth: 1,
+                    borderColor: '#ccc',
+                    padding: 10,
+                    borderRadius: 5,
+                    marginBottom: 10,
+                  }}
+                  value={extractedInfo[index].time}
+                  onChangeText={(text) => {
+                    const updatedInfo = [...extractedInfo];
+                    updatedInfo[index].time = text;
+                    setExtractedInfo(updatedInfo);
+                  }}
+                />
+              )}
+              {extractedInfo[index]?.date && (
+                <TextInput
+                  style={{
+                    borderWidth: 1,
+                    borderColor: '#ccc',
+                    padding: 10,
+                    borderRadius: 5,
+                    marginBottom: 10,
+                  }}
+                  value={extractedInfo[index].date}
+                  onChangeText={(text) => {
+                    const updatedInfo = [...extractedInfo];
+                    updatedInfo[index].date = text;
+                    setExtractedInfo(updatedInfo);
+                  }}
+                />
+              )}
             </View>
+
           </View>
         ))}
       </ScrollView>
@@ -204,3 +270,4 @@ const OCRScreen = () => {
 };
 
 export default OCRScreen;
+
