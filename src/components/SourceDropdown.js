@@ -26,12 +26,17 @@ const SourceDropdown = ({ value, onChange }) => {
         onValueChange={(selectedValue) => {
           onChange(selectedValue); // Gọi hàm onChange từ props
           setPlaceholderCounter((prev) => prev + 1); // Tăng giá trị đếm
-          console.log(placeholderCounter);
+          // console.log(placeholderCounter);
         }}
         value={value}
         items={sources}
+        style={{
+          placeholder: {
+            color: 'red', // Màu của placeholder
+          }}
+        }
         placeholder={
-          placeholderCounter == sources.length
+          placeholderCounter <= 2
             ? { label: 'Chọn nguồn', value: '' } // Hiển thị placeholder lần đầu
             : {} // Không hiển thị placeholder sau lần đầu
         }

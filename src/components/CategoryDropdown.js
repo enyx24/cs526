@@ -29,8 +29,13 @@ const CategoryDropdown = ({ value, onChange }) => {
         }}
         value={value}
         items={categories}
+        style={{
+          placeholder: {
+            color: 'red', // Màu của placeholder
+          }}
+        }
         placeholder={
-          placeholderCounter == categories.length
+          placeholderCounter <= 2
             ? { label: 'Chọn danh mục', value: '' } // Hiển thị placeholder lần đầu
             : {} // Không hiển thị placeholder sau lần đầu
         }
