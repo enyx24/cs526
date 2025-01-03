@@ -5,30 +5,35 @@ import { loadExpenseCategories } from '../database/category';
 
 const CategoryDropdown = ({ value, onChange }) => {
   const [categories, setCategories] = useState([]);
+  const [placeholderCounter, setPlaceholderCounter] = useState(0); // Đếm số lần thay đổi giá trị
 
   // Load categories từ database khi component mount
   useEffect(() => {
     loadExpenseCategories((fetchedCategories) => {
-      // Chuyển đổi đối tượng thành mảng
       const formattedCategories = fetchedCategories.map((item) => ({
         label: item.name,
         value: item.name,
       }));
-      console.log('Formatted Categories:', formattedCategories);
-      setCategories(formattedCategories); // Cập nhật danh mục vào state
+      // console.log('Formatted Categories:', formattedCategories);
+      setCategories(formattedCategories);
     });
   }, []);
 
   return (
     <View style={{ padding: 0 }}>
       <RNPickerSelect
-        onValueChange={onChange} // Gọi hàm onChange từ props
-        value={value} // Truyền giá trị từ props
-        items={categories} // Truyền danh sách categories vào RNPickerSelect
-        placeholder={{
-          label: 'Chọn danh mục',
-          value: '',
+        onValueChange={(selectedValue) => {
+          onChange(selectedValue); // Gọi hàm onChange từ props
+          setPlaceholderCounter((prev) => prev + 1); // Tăng giá trị đếm
+          console.log(placeholderCounter);
         }}
+        value={value}
+        items={categories}
+        placeholder={
+          placeholderCounter == categories.length
+            ? { label: 'Chọn danh mục', value: '' } // Hiển thị placeholder lần đầu
+            : {} // Không hiển thị placeholder sau lần đầu
+        }
       />
     </View>
   );

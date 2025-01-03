@@ -5,6 +5,7 @@ import { loadSources } from '../database/source';
 
 const SourceDropdown = ({ value, onChange }) => {
   const [sources, setSources] = useState([]);
+  const [placeholderCounter, setPlaceholderCounter] = useState(0);
 
   // Load sources từ database khi component mount
   useEffect(() => {
@@ -14,7 +15,7 @@ const SourceDropdown = ({ value, onChange }) => {
         label: item.name,
         value: item.name,
       }));
-      console.log('Formatted Sources:', formattedSources);
+      // console.log('Formatted Sources:', formattedSources);
       setSources(formattedSources); // Cập nhật danh sách sources vào state
     });
   }, []);
@@ -22,13 +23,18 @@ const SourceDropdown = ({ value, onChange }) => {
   return (
     <View style={{ padding: 0 }}>
       <RNPickerSelect
-        onValueChange={onChange} // Gọi hàm onChange từ props
-        value={value} // Truyền giá trị từ props
-        items={sources} // Truyền danh sách sources vào RNPickerSelect
-        placeholder={{
-          label: 'Chọn nguồn',
-          value: '',
+        onValueChange={(selectedValue) => {
+          onChange(selectedValue); // Gọi hàm onChange từ props
+          setPlaceholderCounter((prev) => prev + 1); // Tăng giá trị đếm
+          console.log(placeholderCounter);
         }}
+        value={value}
+        items={sources}
+        placeholder={
+          placeholderCounter == sources.length
+            ? { label: 'Chọn nguồn', value: '' } // Hiển thị placeholder lần đầu
+            : {} // Không hiển thị placeholder sau lần đầu
+        }
       />
     </View>
   );
