@@ -386,6 +386,7 @@ const OCRScreen = () => {
                   () => {
                     // successCount++; // Tăng số lượng giao dịch thành công
                     console.log(`Transaction ${index + 1} added successfully`);
+                    handleDeleteImage(index); // Xóa ảnh sau khi thêm giao dịch thành công
                     getSourceIdByName(
                       transaction.source, // ID của nguồn
                       (source) => {

@@ -26,7 +26,7 @@ const SourceDropdown = ({ value, onChange }) => {
         onValueChange={(selectedValue) => {
           onChange(selectedValue); // Gọi hàm onChange từ props
           setPlaceholderCounter((prev) => prev + 1); // Tăng giá trị đếm
-          // console.log(placeholderCounter);
+          console.log(placeholderCounter);
         }}
         value={value}
         items={sources}
