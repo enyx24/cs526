@@ -142,9 +142,6 @@ const OCRScreen = () => {
       Alert.alert('Không có ảnh', 'Hãy chọn ít nhất một ảnh trước khi thực hiện OCR.');
       return;
     }
-
-    
-
     const extractedData = [];
 
     for (let image of images) {
@@ -191,6 +188,7 @@ const OCRScreen = () => {
   };
 
   const handleDeleteImage = (index) => {
+    console.log('Deleting image:', index);
     const updatedImages = images.filter((_, i) => i !== index); // Xóa ảnh khỏi mảng
     const updatedExtractedInfo = extractedInfo.filter((_, i) => i !== index); // Xóa thông tin trích xuất khỏi mảng
     setImages(updatedImages); // Cập nhật mảng ảnh
@@ -217,20 +215,12 @@ const OCRScreen = () => {
             }}
           >
             {/* Nút xóa ở góc trên bên phải */}
-            <TouchableOpacity 
-              style={{
-                position: 'absolute',
-                top: 10,
-                left: 10,
-                // backgroundColor: 'red',
-                padding: 5,
-                borderRadius: 20,
-              }}
-              onPress={() => handleDeleteImage(index)} // Gọi hàm xóa khi nhấn nút
-            >
-              <Button style={{ color: 'white', fontWeight: 'bold', backgroundColor: 'red' }} title='Xoá'/>
-            </TouchableOpacity>
-
+            <View style={{ position: 'absolute', top: 15, left: 20 }}>
+              <Button 
+                style={{ color: 'white', fontWeight: 'bold'}} 
+                title='Xoá'
+                onPress={() => handleDeleteImage(index)}/>
+            </View>
             {/* Hiển thị ảnh với tính năng nhấn giữ */}
             <TouchableOpacity 
               onLongPress={() => handleLongPress(image.uri)} // Khi nhấn giữ
@@ -357,7 +347,7 @@ const OCRScreen = () => {
           </View> */}
         </View>
       )}
-      {!zoomedImage && (
+      {images.length > 0 && !zoomedImage && (
         <View style={{ right: 20, top: 15, position: 'absolute' }}>
           <Button
             title="Xong"
