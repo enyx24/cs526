@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   SafeAreaView,
   View,
@@ -10,6 +10,7 @@ import {
 import { PieChart } from 'react-native-chart-kit';
 import { Dimensions } from 'react-native';
 import { getTransactions } from '../database/transaction';
+import { useFocusEffect } from '@react-navigation/native';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -102,9 +103,13 @@ const About = () => {
     setCurrentDate(newDate);
   };
 
-  useEffect(() => {
-    fetchTransactions();
-  }, [activeTopTab, currentDate]);
+  // Sử dụng useFocusEffect để reload lại dữ liệu khi tab được bấm vào
+  useFocusEffect(
+    useCallback(() => {
+      console.log('Tab focused, reloading data...');
+      fetchTransactions();
+    }, [activeTopTab, currentDate])
+  );
 
   return (
     <SafeAreaView style={styles.container}>
