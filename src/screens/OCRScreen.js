@@ -5,7 +5,7 @@ import { launchImageLibrary } from 'react-native-image-picker';
 import CategoryDropdown from '../components/CategoryDropdown';
 import SourceDropdown from '../components/SourceDropdown';
 import { addTransaction } from '../database/transaction';
-
+import { updateSourceAmount, getSourceIdByName } from '../database/source';
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window'); // Lấy chiều rộng và chiều cao màn hình
 
 const results = [];
@@ -396,6 +396,32 @@ const OCRScreen = () => {
                   () => {
                     // successCount++; // Tăng số lượng giao dịch thành công
                     console.log(`Transaction ${index + 1} added successfully`);
+                    getSourceIdByName(
+                      transaction.source, // ID của nguồn
+                      (source) => {
+                        if (source) {
+                          // Tính toán số tiền mới
+                          const newAmount = parseInt(source.amount, 10) - transaction.amount;
+
+                          // Cập nhật số tiền mới vào nguồn
+                          updateSourceAmount(
+                            source.id, // ID của nguồn
+                            newAmount, // Số tiền mới sau khi trừ
+                            () => {
+                              console.log(`Updated source amount for ${transaction.source}`);
+                            },
+                            (error) => {
+                              console.log('Error updating source amount:', error);
+                            }
+                          );
+                        } else {
+                          console.log(`Source with ID ${transaction.source} not found`);
+                        }
+                      },
+                      (error) => {
+                        console.log('Error fetching source by ID:', error);
+                      }
+                    );
                   },
                   (error) => {
                     failureCount++; // Tăng số giao dịch thất bại

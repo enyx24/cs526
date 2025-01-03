@@ -143,3 +143,23 @@ export const transferAmount = (fromId, toId, amount, callback) => {
     );
   });
 };
+
+export const getSourceIdByName = (name, callback, errorCallback) => {
+  db.transaction(tx => {
+    tx.executeSql(
+      'SELECT id, amount FROM sources WHERE name = ?',
+      [name],
+      (tx, results) => {
+        if (results.rows.length > 0) {
+          callback(results.rows.item(0)); // Trả về ID và số tiền
+        } else {
+          callback(null); // Không tìm thấy
+        }
+      },
+      error => {
+        console.error('Error fetching source by name:', error);
+        if (errorCallback) errorCallback(error);
+      }
+    );
+  });
+};
