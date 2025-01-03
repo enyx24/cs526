@@ -1,0 +1,49 @@
+{
+    "MoMo": [
+      "(?i)momo",
+      "(?i)ngan hang ban viet"
+    ],
+    "Techcombank": [
+      "(?i)tcb",
+      "(?i)techcombank",
+      "(?i)ngan hang ky thuong"
+    ],
+    "ACB": [
+      "(?i)acb",
+      "(?i)á châu bank",
+      "(?i)ngan hang a chau",
+      "(?i)a chau bank"
+    ],
+    "Vietcombank": [
+      "(?i)vcb",
+      "(?i)vietcombank",
+      "(?i)ngan hang thuong mai"
+    ],
+    "Agribank": [
+      "(?i)agribank",
+      "agb",
+      "(?i)ngan hang nong nghiep"
+    ],
+    "Sacombank": [
+      "(?i)sacombank",
+      "(?i)sai gon thuong tin"
+    ],
+    "BIDV": [
+      "(?i)bidv",
+      "(?i)ngan hang dau tu va phat trien"
+    ],
+    "MB": [
+      "(?i)mb",
+      "(?i)mbbank",
+      "(?i)ngan hang quan doi"
+    ],
+    "HDBank": [
+      "(?i)hdbank",
+      "(?i)ngan hang hdbank"
+    ],
+    "Vietinbank": [
+      "(?i)vietinbank",
+      "(?i)ngan hang vietinbank"
+    ]
+  }
+  
