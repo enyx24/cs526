@@ -59,25 +59,32 @@ const SourceScreen = () => {
     }, [])
   );
 
+  // Tải danh sách nguồn tiền
+  const loadSourcesList = () => {
+    loadSources(setSources);
+  };
+
+  // Tạo danh sách nguồn tiền khả dụng (loại bỏ nguồn tiền đã tồn tại)
+  const availableSourceOptions = sourceOptions.filter(
+    (option) => !sources.some((source) => source.name === option.value)
+  );
+
   // Hàm thêm nguồn tiền
   const handleAddSource = () => {
     if (!selectedSource || !amount) {
-      alert('Vui lòng chọn nguồn tiền và nhập số tiền!');
+      Alert.alert('Lỗi', 'Vui lòng chọn nguồn tiền và nhập số tiền!');
       return;
     }
 
+    // Thêm nguồn tiền mới
     addSource(selectedSource, parseInt(amount, 10), note, () => {
       loadSourcesList();
+      Alert.alert('Thành công', 'Nguồn tiền đã được thêm thành công!', [{ text: 'OK' }]);
     });
 
     setSelectedSource('');
     setAmount('');
     setNote('');
-  };
-
-  // Tải danh sách nguồn tiền
-  const loadSourcesList = () => {
-    loadSources(setSources);
   };
 
   // Hàm xóa nguồn tiền
@@ -106,12 +113,12 @@ const SourceScreen = () => {
   // Hàm chuyển tiền giữa các nguồn tiền
   const handleTransfer = () => {
     if (!fromSource || !toSource || !transferAmountValue) {
-      alert('Vui lòng chọn nguồn tiền và nhập số tiền!');
+      Alert.alert('Lỗi', 'Vui lòng chọn nguồn tiền và nhập số tiền!');
       return;
     }
 
     if (fromSource === toSource) {
-      alert('Nguồn gốc và nguồn đích không thể giống nhau!');
+      Alert.alert('Lỗi', 'Nguồn gốc và nguồn đích không thể giống nhau!');
       return;
     }
 
@@ -119,10 +126,10 @@ const SourceScreen = () => {
 
     transferAmount(fromSource, toSource, amount, (success) => {
       if (success) {
-        alert('Chuyển tiền thành công!');
+        Alert.alert('Thành công', 'Chuyển tiền thành công!', [{ text: 'OK' }]);
         loadSourcesList();
       } else {
-        alert('Chuyển tiền thất bại! Kiểm tra số dư.');
+        Alert.alert('Lỗi', 'Chuyển tiền thất bại! Kiểm tra số dư.');
       }
     });
 
@@ -166,7 +173,6 @@ const SourceScreen = () => {
             setShowCreateSource(false);
             setShowSourceList(true);
             setShowTransferSection(false);
-            loadSourcesList();
           }}
         >
           <Text style={styles.buttonText}>Danh Sách</Text>
@@ -192,7 +198,7 @@ const SourceScreen = () => {
             <Text style={styles.label}>Nguồn tiền</Text>
             <RNPickerSelect
               onValueChange={(value) => setSelectedSource(value)}
-              items={sourceOptions}
+              items={availableSourceOptions}
               placeholder={{ label: 'Chọn nguồn tiền', value: '' }}
               style={pickerSelectStyles}
               value={selectedSource}
