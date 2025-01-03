@@ -27,7 +27,7 @@ const CategoryDropdown = ({ value, onChange }) => {
         items={categories} // Truyền danh sách categories vào RNPickerSelect
         placeholder={{
           label: 'Chọn danh mục',
-          value: null,
+          value: '',
         }}
       />
     </View>

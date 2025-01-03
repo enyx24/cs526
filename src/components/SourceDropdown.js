@@ -27,7 +27,7 @@ const SourceDropdown = ({ value, onChange }) => {
         items={sources} // Truyền danh sách sources vào RNPickerSelect
         placeholder={{
           label: 'Chọn nguồn',
-          value: null,
+          value: '',
         }}
       />
     </View>

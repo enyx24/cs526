@@ -74,17 +74,27 @@ const OCRScreen = () => {
   const [ocrResults, setOcrResults] = useState([]);
   const [extractedInfo, setExtractedInfo] = useState([]);
   const [zoomedImage, setZoomedImage] = useState(null); // Trạng thái lưu ảnh đang được phóng to
-  const [categoryValue, setCategoryValue] = useState(null); // Giá trị của CategoryDropdown
-  const [sourceValue, setSourceValue] = useState(null);  // Giá trị của SourceDropdown
+  useEffect(() => {
+    if (images && images.length > 0) {
+      handleOCRButtonPress();
+    }
+  }, [images]);
+  // const [categoryValue, setCategoryValue] = useState(null); // Giá trị của CategoryDropdown
+  // const [sourceValue, setSourceValue] = useState(null);  // Giá trị của SourceDropdown
 
 
-  const handleCategoryChange = (value) => {
-    setCategoryValue(value);
-  };
+  // const handleCategoryChange = (value, index) => {
+  //   console.log('Category Value:', value, ' index: ',index);
+  //   const temp = [...extractedInfo];
+  //   temp[index].category = value;
+  //   setExtractedInfo(temp);
+  // };
 
-  const handleSourceChange = (value) => {
-    setSourceValue(value);
-  };
+  // const handleSourceChange = (value, index) => {
+  //   const temp = [...extractedInfo];
+  //   temp[index].source = value;
+  //   setExtractedInfo(temp);
+  // };
 
   // Regex patterns
   const regexMoney = /(\b(?:VND\s*)?\d{1,3}(?:[.,]\d{3})*(?:\s*(?:VNĐ|đ|đồng|\sVNĐ|\sVND|VND|d|\sd)))/g;
@@ -160,6 +170,9 @@ const OCRScreen = () => {
         senderReceiver: extractedSenderReceiver ? extractedSenderReceiver[0] : '',
         time: (extractedTime[(extractedTime.length == 1)? 0 : 1]) ? (extractedTime[(extractedTime.length == 1)? 0 : 1]) : '',
         date: extractedDate ? normalizeDate(extractedDate[0]) : '',
+        type: 0,
+        category: '',
+        source: '',
       });
     }
 
@@ -298,15 +311,33 @@ const OCRScreen = () => {
                     <View style={{flex: 1}}>
                       <Text style={{ fontWeight: 'bold' }}>Danh mục:</Text>
                       <CategoryDropdown 
-                        value={categoryValue} 
-                        onChange={handleCategoryChange} 
+                        value={extractedInfo[index]?.category ? extractedInfo[index].category : ''}
+                        onChange={(value) => {
+                          const updatedInfo = [...extractedInfo];
+                          if (updatedInfo[index]) {
+                            updatedInfo[index].category = value;
+                            setExtractedInfo(updatedInfo);
+                          }
+                          else {
+                            console.log('NO CATEGORY');
+                          }
+                        }}   
                       />
                     </View>
                     <View style={{flex: 1}}>
                       <Text style={{ fontWeight: 'bold' }}>Nguồn:</Text>
                       <SourceDropdown 
-                        value={sourceValue} 
-                        onChange={handleSourceChange} 
+                        value={extractedInfo[index]?.source ? extractedInfo[index].source : ''}
+                        onChange={(value) => {
+                          const updatedInfo = [...extractedInfo];
+                          if (updatedInfo[index]) {
+                            updatedInfo[index].source = value;
+                            setExtractedInfo(updatedInfo);
+                          }
+                          else {
+                            console.log('NO SOURCE');
+                          }
+                        }} 
                       />
                     </View>
                   </View>
@@ -321,9 +352,9 @@ const OCRScreen = () => {
           <View style={{ flex: 1, marginLeft: 20, marginRight: 20 }}>
             <Button title="Chọn ảnh" onPress={selectImages} />
           </View>
-          <View style={{ flex: 1, marginLeft: 20, marginRight: 20 }}>
+          {/* <View style={{ flex: 1, marginLeft: 20, marginRight: 20 }}>
             <Button title="Thực hiện OCR" onPress={handleOCRButtonPress} />
-          </View>
+          </View> */}
         </View>
       )}
       {!zoomedImage && (
@@ -337,9 +368,14 @@ const OCRScreen = () => {
 
               extractedInfo.forEach((info, index) => {
                 // Kiểm tra nếu giá trị category và source bị trống thì không thêm vào
-                console.log('Category:', categoryValue);
-                console.log('Source:', sourceValue);
-                if (!info?.date || !info?.money || !categoryValue || !sourceValue) {
+                // console.log('Category:', categoryValue);
+                // console.log('Source:', sourceValue);
+                if (!info?.date || !info?.money || !info?.category || !info?.category) {
+                  failureCount++; // Nếu thiếu thông tin, coi như thất bại
+                  return;
+                }
+                
+                if (info.date == '' || info.money == '' || info.category == '' || info.category == '') {
                   failureCount++; // Nếu thiếu thông tin, coi như thất bại
                   return;
                 }
@@ -347,10 +383,10 @@ const OCRScreen = () => {
                 const transaction = {
                   date: info?.date || '',
                   note: info?.time || '',
-                  source: sourceValue, // Dùng giá trị từ trạng thái source
+                  source: info?.source, // Dùng giá trị từ trạng thái source
                   amount: info?.money || '',
                   type: 0, // Set type = 0
-                  category: categoryValue, // Dùng giá trị từ trạng thái category
+                  category: info.category, // Dùng giá trị từ trạng thái category
                 };
                 console.log('Adding transaction:', transaction);
 
@@ -358,7 +394,7 @@ const OCRScreen = () => {
                 addTransaction(
                   transaction,
                   () => {
-                    successCount++; // Tăng số lượng giao dịch thành công
+                    // successCount++; // Tăng số lượng giao dịch thành công
                     console.log(`Transaction ${index + 1} added successfully`);
                   },
                   (error) => {
@@ -369,11 +405,19 @@ const OCRScreen = () => {
               });
 
               // Hiển thị thông báo khi hoàn tất
-              Alert.alert(
-                'Kết quả thêm giao dịch',
-                `${successCount} giao dịch đã được thêm thành công.\n${failureCount} giao dịch không thể thêm do thiếu thông tin.`,
-                [{ text: 'OK' }]
-              );
+              if (failureCount === 0) {
+                Alert.alert(
+                  'Kết quả thêm giao dịch',
+                  'Tất cả giao dịch đã được thêm thành công.',
+                  [{ text: 'OK' }]
+                );
+              } else {
+                Alert.alert(
+                  'Kết quả thêm giao dịch',
+                  `${failureCount} giao dịch không thể thêm do thiếu thông tin.`,
+                  [{ text: 'OK' }]
+                );
+              }
             }}
           />
 
