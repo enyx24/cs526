@@ -15,6 +15,7 @@ import {
   getTransactions,
   deleteTransaction,
 } from '../database/transaction';
+import { getSourceIdByName, updateSourceAmount } from '../database/source';
 
 const CalendarScreen = () => {
   const [selectedDate, setSelectedDate] = useState(null);
@@ -59,6 +60,9 @@ const CalendarScreen = () => {
   };
 
   const handleDeleteTransaction = (id) => {
+    // Lấy thông tin giao dịch trước khi xóa
+    const transactionToDelete = transactions.find((transaction) => transaction.id === id);
+    console.log('Transaction to delete:', transactionToDelete);
     Alert.alert(
       'Xác nhận xóa',
       'Bạn có chắc chắn muốn xóa giao dịch này?',
@@ -71,6 +75,38 @@ const CalendarScreen = () => {
             deleteTransaction(
               id,
               () => {
+               console.log(transactionToDelete.source)
+              getSourceIdByName(
+                transactionToDelete.source,
+                (sourceData) => {
+                  console.log(sourceData)
+                  if (sourceData) {
+                    console.log('sourceData exists and is:', sourceData);
+                    const newAmount = transactionToDelete.type === 'income'
+                      ? parseInt(sourceData.amount, 10) - parseInt(transactionToDelete.amount, 10)
+                      : parseInt(sourceData.amount, 10) + parseInt(transactionToDelete.amount, 10);
+
+                    console.log('Calculated new amount:', newAmount);
+
+                    updateSourceAmount(
+                      sourceData.id,
+                      newAmount,
+                      () => {
+                        console.log(`Updated successfully for source: ${sourceData.id}`);
+                      },
+                      (error) => {
+                        console.error('Error updating source amount:', error);
+                      }
+                    );
+                  } else {
+                    console.error('sourceData is null or undefined!');
+                  }
+
+                },
+                (error) => {
+                  console.error('Lỗi khi lấy thông tin nguồn:', error);
+                }
+              );
                 Alert.alert('Thành công', 'Giao dịch đã được xóa');
                 calculateTotals(selectedDate);
               },
