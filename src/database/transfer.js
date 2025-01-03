@@ -55,3 +55,21 @@ export const getTransfers = (callback) => {
     );
   });
 };
+
+// Hàm xóa toàn bộ lịch sử chuyển tiền
+export const deleteAllTransfers = (callback) => {
+  db.transaction((tx) => {
+    tx.executeSql(
+      'DELETE FROM transfers',
+      [],
+      () => {
+        console.log('All transfers deleted successfully');
+        if (callback) callback(true);
+      },
+      (error) => {
+        console.error('Error deleting all transfers:', error);
+        if (callback) callback(false);
+      }
+    );
+  });
+};

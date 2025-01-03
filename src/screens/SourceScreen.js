@@ -24,6 +24,7 @@ import {
   createTransferTable,
   addTransfer,
   getTransfers,
+  deleteAllTransfers 
 } from '../database/transfer';
 
 const SourceScreen = () => {
@@ -141,11 +142,30 @@ const SourceScreen = () => {
     setTransferAmountValue('');
   };
 
-  // const getSourceNameById = (id) => {
-  //   const source = sources.find((s) => s.id === id);
-  //   return source ? source.name : 'Không xác định';
-  // };
-
+  // Thêm hàm xử lý xóa toàn bộ lịch sử
+  const handleDeleteAllTransfers = () => {
+    Alert.alert(
+      'Xác nhận xóa',
+      'Bạn có chắc chắn muốn xóa toàn bộ lịch sử chuyển tiền không?',
+      [
+        { text: 'Hủy', style: 'cancel' },
+        {
+          text: 'Có',
+          onPress: () => {
+            deleteAllTransfers((success) => {
+              if (success) {
+                loadTransfers();
+                Alert.alert('Thành công', 'Lịch sử chuyển tiền đã được xóa!');
+              } else {
+                Alert.alert('Lỗi', 'Xóa lịch sử chuyển tiền thất bại!');
+              }
+            });
+          },
+        },
+      ],
+      { cancelable: true }
+    );
+  };
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.buttonContainer}>
@@ -296,6 +316,12 @@ const SourceScreen = () => {
                 </Text>
               </View>
             ))}
+            <TouchableOpacity
+              style={styles.deleteAllButton}
+              onPress={handleDeleteAllTransfers}
+            >
+              <Text style={styles.deleteAllButtonText}>Xóa Tất Cả</Text>
+            </TouchableOpacity>
           </View>
         </ScrollView>
       )}
@@ -437,6 +463,18 @@ const styles = StyleSheet.create({
     color: '#666',
     marginTop: 20,
     fontSize: 14,
+  },
+  deleteAllButton: {
+  backgroundColor: '#FF0000',
+  paddingVertical: 8,
+  paddingHorizontal: 12,
+  borderRadius: 8,
+  },
+  deleteAllButtonText: {
+    textAlign: 'center',
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: 'bold',
   },
 });
 
