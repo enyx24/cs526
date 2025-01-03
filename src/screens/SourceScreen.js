@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   SafeAreaView,
   View,
@@ -10,6 +10,7 @@ import {
   Alert,
 } from 'react-native';
 import RNPickerSelect from 'react-native-picker-select';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   createTable,
   addSource,
@@ -18,7 +19,7 @@ import {
   transferAmount,
 } from '../database/source';
 
-const App = () => {
+const SourceScreen = () => {
   const [selectedSource, setSelectedSource] = useState(''); // Nguồn tiền được chọn
   const [amount, setAmount] = useState(''); // Số tiền
   const [note, setNote] = useState(''); // Ghi chú
@@ -49,6 +50,14 @@ const App = () => {
   useEffect(() => {
     createTable();
   }, []);
+
+  // Sử dụng useFocusEffect để tải lại danh sách nguồn tiền khi màn hình được focus
+  useFocusEffect(
+    useCallback(() => {
+      console.log('Screen focused, reloading sources...');
+      loadSourcesList();
+    }, [])
+  );
 
   // Hàm thêm nguồn tiền
   const handleAddSource = () => {
@@ -407,4 +416,4 @@ const pickerSelectStyles = StyleSheet.create({
   },
 });
 
-export default App;
+export default SourceScreen;
