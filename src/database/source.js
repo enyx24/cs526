@@ -163,3 +163,26 @@ export const getSourceIdByName = (name, callback, errorCallback) => {
     );
   });
 };
+// Lấy tên nguồn tiền dựa trên ID
+export const getSourceNameById = async (id) => {
+  return new Promise((resolve, reject) => {
+    db.transaction((tx) => {
+      tx.executeSql(
+        'SELECT name FROM sources WHERE id = ?',
+        [id],
+        (tx, results) => {
+          if (results.rows.length > 0) {
+            resolve(results.rows.item(0).name);
+          } else {
+            resolve('Không xác định');
+          }
+        },
+        (error) => {
+          console.log('Error fetching name by ID:', error);
+          reject(error);
+        }
+      );
+    });
+  });
+};
+
