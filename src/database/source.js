@@ -109,3 +109,37 @@ export const getSourceById = (id, callback) => {
     );
   });
 };
+//chuyển tiền
+export const transferAmount = (fromId, toId, amount, callback) => {
+  db.transaction(tx => {
+    // Trừ tiền từ nguồn gốc
+    tx.executeSql(
+      'UPDATE sources SET amount = amount - ? WHERE id = ? AND amount >= ?',
+      [amount, fromId, amount],
+      (_, result) => {
+        if (result.rowsAffected > 0) {
+          // Cộng tiền vào nguồn đích
+          tx.executeSql(
+            'UPDATE sources SET amount = amount + ? WHERE id = ?',
+            [amount, toId],
+            () => {
+              console.log('Transfer completed successfully');
+              callback(true); // Thành công
+            },
+            error => {
+              console.log('Error adding amount to destination:', error);
+              callback(false); // Lỗi
+            }
+          );
+        } else {
+          console.log('Insufficient balance or invalid source');
+          callback(false); // Số dư không đủ
+        }
+      },
+      error => {
+        console.log('Error deducting amount from source:', error);
+        callback(false); // Lỗi
+      }
+    );
+  });
+};

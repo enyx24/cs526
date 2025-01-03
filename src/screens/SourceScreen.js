@@ -7,18 +7,28 @@ import {
   FlatList,
   StyleSheet,
   TextInput,
-  Alert
+  Alert,
 } from 'react-native';
 import RNPickerSelect from 'react-native-picker-select';
-import { createTable, addSource, loadSources, deleteSource } from '../database/source';
+import {
+  createTable,
+  addSource,
+  loadSources,
+  deleteSource,
+  transferAmount,
+} from '../database/source';
 
 const App = () => {
-  const [selectedSource, setSelectedSource] = useState(''); // Tên nguồn tiền được chọn
+  const [selectedSource, setSelectedSource] = useState(''); // Nguồn tiền được chọn
   const [amount, setAmount] = useState(''); // Số tiền
   const [note, setNote] = useState(''); // Ghi chú
   const [sources, setSources] = useState([]); // Danh sách nguồn tiền
   const [showCreateSource, setShowCreateSource] = useState(true); // Điều khiển màn hình tạo nguồn tiền
   const [showSourceList, setShowSourceList] = useState(false); // Điều khiển màn hình danh sách nguồn tiền
+  const [showTransferSection, setShowTransferSection] = useState(false); // Điều khiển màn hình chuyển tiền
+  const [fromSource, setFromSource] = useState(null); // Nguồn gốc
+  const [toSource, setToSource] = useState(null); // Nguồn đích
+  const [transferAmountValue, setTransferAmountValue] = useState(''); // Số tiền chuyển
 
   // Danh sách ngân hàng/ví điện tử cố định
   const sourceOptions = [
@@ -32,7 +42,7 @@ const App = () => {
     { label: 'BIDV', value: 'BIDV' },
     { label: 'MB', value: 'MB' },
     { label: 'HDBank', value: 'HDBank' },
-    { label: 'VietinBank', value: 'VietinBank' }
+    { label: 'VietinBank', value: 'VietinBank' },
   ];
 
   // Tạo bảng khi lần đầu tiên sử dụng ứng dụng
@@ -47,15 +57,9 @@ const App = () => {
       return;
     }
 
-    addSource(
-      selectedSource,
-      parseInt(amount, 10), // Lưu dưới dạng số nguyên
-      note,
-      () => {
-        loadSourcesList();
-      }
-    );
-
+    addSource(selectedSource, parseInt(amount, 10), note, () => {
+      loadSourcesList();
+    });
 
     setSelectedSource('');
     setAmount('');
@@ -70,19 +74,18 @@ const App = () => {
   // Hàm xóa nguồn tiền
   const handleDeleteSource = (id) => {
     Alert.alert(
-      "Xác nhận xóa",
-      "Bạn có chắc chắn muốn xóa nguồn tiền này không?",
+      'Xác nhận xóa',
+      'Bạn có chắc chắn muốn xóa nguồn tiền này không?',
       [
         {
-          text: "Hủy",
-          onPress: () => console.log("Hủy xóa"), // Nhật ký khi người dùng hủy
-          style: "cancel",
+          text: 'Hủy',
+          style: 'cancel',
         },
         {
-          text: "Có",
+          text: 'Có',
           onPress: () => {
             deleteSource(id, () => {
-              loadSourcesList(); // Tải lại danh sách sau khi xóa
+              loadSourcesList();
             });
           },
         },
@@ -91,10 +94,38 @@ const App = () => {
     );
   };
 
+  // Hàm chuyển tiền giữa các nguồn tiền
+  const handleTransfer = () => {
+    if (!fromSource || !toSource || !transferAmountValue) {
+      alert('Vui lòng chọn nguồn tiền và nhập số tiền!');
+      return;
+    }
+
+    if (fromSource === toSource) {
+      alert('Nguồn gốc và nguồn đích không thể giống nhau!');
+      return;
+    }
+
+    const amount = parseInt(transferAmountValue, 10);
+
+    transferAmount(fromSource, toSource, amount, (success) => {
+      if (success) {
+        alert('Chuyển tiền thành công!');
+        loadSourcesList();
+      } else {
+        alert('Chuyển tiền thất bại! Kiểm tra số dư.');
+      }
+    });
+
+    setFromSource(null);
+    setToSource(null);
+    setTransferAmountValue('');
+  };
+
   const renderItem = ({ item }) => (
     <View style={styles.sourceItem}>
       <Text style={styles.sourceName}>{item.name}</Text>
-      <Text style={styles.sourceAmount}>{item.amount}</Text>
+      <Text style={styles.sourceAmount}>{item.amount.toLocaleString('vi-VN')}đ</Text>
       {item.note ? <Text style={styles.sourceNote}>{item.note}</Text> : null}
       <TouchableOpacity
         style={styles.deleteButton}
@@ -114,9 +145,10 @@ const App = () => {
           onPress={() => {
             setShowCreateSource(true);
             setShowSourceList(false);
+            setShowTransferSection(false);
           }}
         >
-          <Text style={styles.buttonText}>Tạo Nguồn</Text>
+          <Text style={styles.buttonText}>Tạo</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -124,10 +156,22 @@ const App = () => {
           onPress={() => {
             setShowCreateSource(false);
             setShowSourceList(true);
-            loadSourcesList(); // Tải danh sách nguồn tiền khi hiển thị danh sách
+            setShowTransferSection(false);
+            loadSourcesList();
           }}
         >
-          <Text style={styles.buttonText}>Danh Sách Nguồn</Text>
+          <Text style={styles.buttonText}>Danh Sách</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.button, showTransferSection && styles.activeButton]}
+          onPress={() => {
+            setShowCreateSource(false);
+            setShowSourceList(false);
+            setShowTransferSection(true);
+          }}
+        >
+          <Text style={styles.buttonText}>Chuyển Tiền</Text>
         </TouchableOpacity>
       </View>
 
@@ -135,7 +179,6 @@ const App = () => {
       {showCreateSource && (
         <View style={styles.createSection}>
           <Text style={styles.title}>Tạo Nguồn Tiền</Text>
-
           <View style={styles.inputContainer}>
             <Text style={styles.label}>Nguồn tiền</Text>
             <RNPickerSelect
@@ -146,7 +189,6 @@ const App = () => {
               value={selectedSource}
             />
           </View>
-
           <View style={styles.inputContainer}>
             <Text style={styles.label}>Số tiền</Text>
             <TextInput
@@ -157,7 +199,6 @@ const App = () => {
               onChangeText={(text) => setAmount(text)}
             />
           </View>
-
           <View style={styles.inputContainer}>
             <Text style={styles.label}>Ghi chú</Text>
             <TextInput
@@ -167,7 +208,6 @@ const App = () => {
               onChangeText={(text) => setNote(text)}
             />
           </View>
-
           <TouchableOpacity style={styles.addButton} onPress={handleAddSource}>
             <Text style={styles.addButtonText}>Thêm nguồn tiền</Text>
           </TouchableOpacity>
@@ -181,13 +221,49 @@ const App = () => {
           keyExtractor={(item) => item.id.toString()}
           renderItem={renderItem}
           style={styles.sourceList}
-          ListEmptyComponent={
-            <Text style={styles.emptyText}>Chưa có nguồn tiền nào!</Text>
-          }
-          ListHeaderComponent={
-            <Text style={styles.title}>Danh Sách Nguồn Tiền</Text>
-          }
+          ListEmptyComponent={<Text style={styles.emptyText}>Chưa có nguồn tiền nào!</Text>}
+          ListHeaderComponent={<Text style={styles.title}>Danh Sách Nguồn Tiền</Text>}
         />
+      )}
+
+      {/* Phần Chuyển Tiền */}
+      {showTransferSection && (
+        <View style={styles.createSection}>
+          <Text style={styles.title}>Chuyển Tiền</Text>
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Nguồn gốc</Text>
+            <RNPickerSelect
+              onValueChange={(value) => setFromSource(value)}
+              items={sources.map((source) => ({ label: source.name, value: source.id }))}
+              placeholder={{ label: 'Chọn nguồn gốc', value: null }}
+              style={pickerSelectStyles}
+              value={fromSource}
+            />
+          </View>
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Nguồn đích</Text>
+            <RNPickerSelect
+              onValueChange={(value) => setToSource(value)}
+              items={sources.map((source) => ({ label: source.name, value: source.id }))}
+              placeholder={{ label: 'Chọn nguồn đích', value: null }}
+              style={pickerSelectStyles}
+              value={toSource}
+            />
+          </View>
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Số tiền</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Nhập số tiền"
+              keyboardType="numeric"
+              value={transferAmountValue}
+              onChangeText={(text) => setTransferAmountValue(text)}
+            />
+          </View>
+          <TouchableOpacity style={styles.addButton} onPress={handleTransfer}>
+            <Text style={styles.addButtonText}>Chuyển Tiền</Text>
+          </TouchableOpacity>
+        </View>
       )}
     </SafeAreaView>
   );
