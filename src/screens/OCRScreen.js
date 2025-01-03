@@ -6,6 +6,7 @@ import CategoryDropdown from '../components/CategoryDropdown';
 import SourceDropdown from '../components/SourceDropdown';
 import { addTransaction } from '../database/transaction';
 import { updateSourceAmount, getSourceIdByName } from '../database/source';
+import checkBank from '../utils/checkBank';
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window'); // Lấy chiều rộng và chiều cao màn hình
 
 const results = [];
@@ -161,6 +162,8 @@ const OCRScreen = () => {
       const extractedSenderReceiver = text.match(regexSenderReceiver);
       const extractedTime = text.match(regexTime);
       const extractedDate = text.match(regexDate);
+      const extractedSource = checkBank(text);
+      console.log('abcd: ', extractedSource);  
 
       extractedData.push({
         money: extractedMoney ? normalizeMoney(extractedMoney[0]) : '',
@@ -169,7 +172,7 @@ const OCRScreen = () => {
         date: extractedDate ? normalizeDate(extractedDate[0]) : '',
         type: 0,
         category: '',
-        source: '',
+        source: extractedSource ? extractedSource : '',
       });
     }
 
