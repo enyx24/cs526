@@ -347,7 +347,7 @@ const OCRScreen = () => {
           </View> */}
         </View>
       )}
-      {!zoomedImage && (
+      {images.length > 0 && !zoomedImage && (
         <View style={{ right: 20, top: 15, position: 'absolute' }}>
           <Button
             title="Xong"
