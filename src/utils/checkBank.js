@@ -18,6 +18,7 @@ const bankData = {
   ],
   "Vietcombank": [
     "vcb",
+    "vcbdigibank",
     "vietcombank",
     "ngan hang thuong mai"
   ],
@@ -51,17 +52,30 @@ const bankData = {
 
 // Hàm kiểm tra ngân hàng
 const checkBank = (input) => {
-  console.log(input)
+  console.log(input);
+  const matchedBanks = []; // Mảng lưu các ngân hàng xuất hiện
+
   for (let bank in bankData) {
     const regexList = bankData[bank];
     for (let regex of regexList) {
       const regExp = new RegExp(regex, 'i'); // Thêm flag 'i' vào đối tượng RegExp
       if (regExp.test(input)) {
-        return bank; // Trả về tên ngân hàng đầu tiên khớp
+        matchedBanks.push(bank); // Lưu tên ngân hàng vào mảng
       }
     }
   }
-  return null; // Không tìm thấy ngân hàng nào khớp
+
+  if (matchedBanks.length === 0) {
+    return null; // Không tìm thấy ngân hàng nào khớp
+  }
+
+  // Kiểm tra ngân hàng cuối cùng
+  if (matchedBanks[matchedBanks.length - 1] === "MB") {
+    return "MB"; // Trả về "MB" nếu ngân hàng cuối cùng là MB
+  }
+
+  return matchedBanks[0]; // Trả về ngân hàng đầu tiên tìm thấy
 };
+
 
 export default checkBank;
