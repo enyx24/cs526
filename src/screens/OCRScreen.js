@@ -101,6 +101,7 @@ const OCRScreen = () => {
 
     for (let image of images) {
       const ocrResult = await performOCR(image.uri);
+      // console.log('OCR Result:', ocrResult);
       results.push(ocrResult);
 
       ocrResult.forEach(item => {
@@ -109,7 +110,7 @@ const OCRScreen = () => {
 
       // Trích xuất văn bản từ OCR result
       const text = ocrResult.map(item => item.text).join(' '); // Nối tất cả văn bản lại
-
+      console.log(text);
       // Thực hiện regex để trích xuất thông tin
       const extractedMoney = text.match(regexMoney);
       const extractedSenderReceiver = text.match(regexSenderReceiver);
@@ -163,9 +164,9 @@ const OCRScreen = () => {
               <Image
                 source={{ uri: image.uri }}
                 style={{
-                  width: zoomedImage === image.uri ? screenWidth*0.8 : 300, // Phóng to ảnh nếu được chọn
-                  height: zoomedImage === image.uri ? screenHeight*0.8 : 300, // Phóng to ảnh nếu được chọn
-                  marginBottom: 20,
+                  width: zoomedImage === image.uri ? screenWidth*0.9 : 225, // Phóng to ảnh nếu được chọn
+                  height: zoomedImage === image.uri ? screenHeight*0.9 : 400, // Phóng to ảnh nếu được chọn
+                  top: zoomedImage === image.uri ? screenHeight*0.2 : 0,
                 }}
                 resizeMode="contain"
               />
