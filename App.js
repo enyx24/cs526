@@ -34,6 +34,7 @@ export default function App() {
           tabBarActiveTintColor: '#FFA500',
           tabBarInactiveTintColor: 'gray',
           tabBarStyle: { height: 60 },
+          headerShown: false,
         })}
       >
         <Tab.Screen name="Nhập vào" component={HomeScreen} />
