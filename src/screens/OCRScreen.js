@@ -199,6 +199,8 @@ const OCRScreen = () => {
   };
   const handleDone = async () => {
   try {
+    const sourceMap = new Map(); // Bản đồ lưu thông tin nguồn tiền và số tiền cần trừ
+
     for (const info of extractedInfo) {
       if (!info?.date || !info?.money || !info?.category || !info?.source) {
         throw new Error('Thông tin giao dịch không đầy đủ.');
@@ -224,23 +226,31 @@ const OCRScreen = () => {
         );
       });
 
-      // Lấy thông tin nguồn tiền
+      // Tính tổng số tiền cần trừ cho từng nguồn
+      if (sourceMap.has(transaction.source)) {
+        sourceMap.set(transaction.source, sourceMap.get(transaction.source) + transaction.amount);
+      } else {
+        sourceMap.set(transaction.source, transaction.amount);
+      }
+    }
+
+    // Cập nhật số tiền cho từng nguồn
+    for (const [sourceName, totalAmount] of sourceMap.entries()) {
       const source = await new Promise((resolve, reject) => {
-        getSourceIdByName(transaction.source, resolve, reject);
+        getSourceIdByName(sourceName, resolve, reject);
       });
 
       if (!source) {
-        console.error(`Không tìm thấy nguồn tiền: ${transaction.source}`);
+        console.error(`Không tìm thấy nguồn tiền: ${sourceName}`);
         continue;
       }
 
-      // Cập nhật số tiền của nguồn
-      const newAmount = source.amount - transaction.amount;
+      const newAmount = source.amount - totalAmount;
       await new Promise((resolve, reject) => {
         updateSourceAmount(source.id, newAmount, resolve, reject);
       });
 
-      console.log(`Updated source ${transaction.source} with new amount: ${newAmount}`);
+      console.log(`Updated source ${sourceName} with new amount: ${newAmount}`);
     }
 
     Alert.alert(
