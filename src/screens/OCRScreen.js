@@ -198,71 +198,66 @@ const OCRScreen = () => {
     setExtractedInfo(updatedExtractedInfo); // Cập nhật thông tin trích xuất
   };
   const handleDone = async () => {
-    try {
-      const results = await Promise.all(
-        extractedInfo.map(async (info, index) => {
-          if (!info?.date || !info?.money || !info?.category || !info?.source) {
-            throw new Error(`Thông tin giao dịch thiếu ở mục ${index + 1}`);
-          }
+  try {
+    for (const info of extractedInfo) {
+      if (!info?.date || !info?.money || !info?.category || !info?.source) {
+        throw new Error('Thông tin giao dịch không đầy đủ.');
+      }
 
-          const transaction = {
-            date: info.date,
-            note: info.time || '',
-            source: info.source,
-            amount: parseInt(info.money, 10),
-            type: 0,
-            category: info.category,
-          };
+      const transaction = {
+        date: info.date,
+        note: info.time || '',
+        source: info.source,
+        amount: parseInt(info.money, 10),
+        type: 0,
+        category: info.category,
+      };
 
-          console.log('Adding transaction:', transaction);
+      console.log('Adding transaction:', transaction);
 
-          await new Promise((resolve, reject) => {
-            addTransaction(
-              transaction,
-              async () => {
-                const source = await new Promise((resolveSource, rejectSource) => {
-                  getSourceIdByName(
-                    transaction.source,
-                    resolveSource,
-                    rejectSource
-                  );
-                });
+      // Thêm giao dịch
+      await new Promise((resolve, reject) => {
+        addTransaction(
+          transaction,
+          resolve,
+          reject
+        );
+      });
 
-                if (source) {
-                  const newAmount = source.amount - transaction.amount;
-                  await new Promise((resolveUpdate, rejectUpdate) => {
-                    updateSourceAmount(
-                      source.id,
-                      newAmount,
-                      resolveUpdate,
-                      rejectUpdate
-                    );
-                  });
-                } else {
-                  throw new Error('Không tìm thấy nguồn tiền');
-                }
-                resolve();
-              },
-              reject
-            );
-          });
-        })
-      );
+      // Lấy thông tin nguồn tiền
+      const source = await new Promise((resolve, reject) => {
+        getSourceIdByName(transaction.source, resolve, reject);
+      });
 
-      Alert.alert(
-        'Kết quả thêm giao dịch',
-        'Tất cả giao dịch đã được thêm thành công.',
-        [{ text: 'OK' }]
-      );
-    } catch (error) {
-      console.error('Error processing transactions:', error);
-      Alert.alert(
-        'Kết quả thêm giao dịch',
-        `Đã xảy ra lỗi: ${error.message}`,
-        [{ text: 'OK' }]
-      );
+      if (!source) {
+        console.error(`Không tìm thấy nguồn tiền: ${transaction.source}`);
+        continue;
+      }
+
+      // Cập nhật số tiền của nguồn
+      const newAmount = source.amount - transaction.amount;
+      await new Promise((resolve, reject) => {
+        updateSourceAmount(source.id, newAmount, resolve, reject);
+      });
+
+      console.log(`Updated source ${transaction.source} with new amount: ${newAmount}`);
     }
-  };
+
+    Alert.alert(
+      'Kết quả thêm giao dịch',
+      'Tất cả giao dịch đã được thêm thành công.',
+      [{ text: 'OK' }]
+    );
+  } catch (error) {
+    console.error('Error processing transactions:', error);
+    Alert.alert(
+      'Kết quả thêm giao dịch',
+      `Đã xảy ra lỗi: ${error.message}`,
+      [{ text: 'OK' }]
+    );
+  }
+};
+
 
   return (
     <>
