@@ -197,6 +197,77 @@ const OCRScreen = () => {
     setImages(updatedImages); // Cập nhật mảng ảnh
     setExtractedInfo(updatedExtractedInfo); // Cập nhật thông tin trích xuất
   };
+  const handleDone = async () => {
+  try {
+    const sourceMap = new Map(); // Bản đồ lưu thông tin nguồn tiền và số tiền cần trừ
+
+    for (const info of extractedInfo) {
+      if (!info?.date || !info?.money || !info?.category || !info?.source) {
+        throw new Error('Thông tin giao dịch không đầy đủ.');
+      }
+
+      const transaction = {
+        date: info.date,
+        note: info.time || '',
+        source: info.source,
+        amount: parseInt(info.money, 10),
+        type: 0,
+        category: info.category,
+      };
+
+      console.log('Adding transaction:', transaction);
+
+      // Thêm giao dịch
+      await new Promise((resolve, reject) => {
+        addTransaction(
+          transaction,
+          resolve,
+          reject
+        );
+      });
+
+      // Tính tổng số tiền cần trừ cho từng nguồn
+      if (sourceMap.has(transaction.source)) {
+        sourceMap.set(transaction.source, sourceMap.get(transaction.source) + transaction.amount);
+      } else {
+        sourceMap.set(transaction.source, transaction.amount);
+      }
+    }
+
+    // Cập nhật số tiền cho từng nguồn
+    for (const [sourceName, totalAmount] of sourceMap.entries()) {
+      const source = await new Promise((resolve, reject) => {
+        getSourceIdByName(sourceName, resolve, reject);
+      });
+
+      if (!source) {
+        console.error(`Không tìm thấy nguồn tiền: ${sourceName}`);
+        continue;
+      }
+
+      const newAmount = source.amount - totalAmount;
+      await new Promise((resolve, reject) => {
+        updateSourceAmount(source.id, newAmount, resolve, reject);
+      });
+
+      console.log(`Updated source ${sourceName} with new amount: ${newAmount}`);
+    }
+
+    Alert.alert(
+      'Kết quả thêm giao dịch',
+      'Tất cả giao dịch đã được thêm thành công.',
+      [{ text: 'OK' }]
+    );
+  } catch (error) {
+    console.error('Error processing transactions:', error);
+    Alert.alert(
+      'Kết quả thêm giao dịch',
+      `Đã xảy ra lỗi: ${error.message}`,
+      [{ text: 'OK' }]
+    );
+  }
+};
+
 
   return (
     <>
@@ -354,91 +425,8 @@ const OCRScreen = () => {
         <View style={{ right: 20, top: 15, position: 'absolute' }}>
           <Button
             title="Xong"
-            onPress={() => {
-              console.log('Tui bị ngu');
-              let successCount = 0; // Đếm số giao dịch thành công
-              let failureCount = 0; // Đếm số giao dịch thất bại
-
-              extractedInfo.forEach((info, index) => {
-                // Kiểm tra nếu giá trị category và source bị trống thì không thêm vào
-                // console.log('Category:', categoryValue);
-                // console.log('Source:', sourceValue);
-                if (!info?.date || !info?.money || !info?.category || !info?.category) {
-                  failureCount++; // Nếu thiếu thông tin, coi như thất bại
-                  return;
-                }
-                
-                if (info.date == '' || info.money == '' || info.category == '' || info.category == '') {
-                  failureCount++; // Nếu thiếu thông tin, coi như thất bại
-                  return;
-                }
-
-                const transaction = {
-                  date: info?.date || '',
-                  note: info?.time || '',
-                  source: info?.source, // Dùng giá trị từ trạng thái source
-                  amount: info?.money || '',
-                  type: 0, // Set type = 0
-                  category: info.category, // Dùng giá trị từ trạng thái category
-                };
-                console.log('Adding transaction:', transaction);
-
-                // Gọi hàm addTransaction và truyền callback cho thành công và lỗi
-                addTransaction(
-                  transaction,
-                  () => {
-                    // successCount++; // Tăng số lượng giao dịch thành công
-                    console.log(`Transaction ${index + 1} added successfully`);
-                    handleDeleteImage(index); // Xóa ảnh sau khi thêm giao dịch thành công
-                    getSourceIdByName(
-                      transaction.source, // ID của nguồn
-                      (source) => {
-                        if (source) {
-                          // Tính toán số tiền mới
-                          const newAmount = parseInt(source.amount, 10) - transaction.amount;
-
-                          // Cập nhật số tiền mới vào nguồn
-                          updateSourceAmount(
-                            source.id, // ID của nguồn
-                            newAmount, // Số tiền mới sau khi trừ
-                            () => {
-                              console.log(`Updated source amount for ${transaction.source}`);
-                            },
-                            (error) => {
-                              console.log('Error updating source amount:', error);
-                            }
-                          );
-                        } else {
-                          console.log(`Source with ID ${transaction.source} not found`);
-                        }
-                      },
-                      (error) => {
-                        console.log('Error fetching source by ID:', error);
-                      }
-                    );
-                  },
-                  (error) => {
-                    failureCount++; // Tăng số giao dịch thất bại
-                    console.log('Error adding transaction:', error);
-                  }
-                );
-              });
-
-              // Hiển thị thông báo khi hoàn tất
-              if (failureCount === 0) {
-                Alert.alert(
-                  'Kết quả thêm giao dịch',
-                  'Tất cả giao dịch đã được thêm thành công.',
-                  [{ text: 'OK' }]
-                );
-              } else {
-                Alert.alert(
-                  'Kết quả thêm giao dịch',
-                  `${failureCount} giao dịch không thể thêm do thiếu thông tin.`,
-                  [{ text: 'OK' }]
-                );
-              }
-            }}
+            onPress={handleDone}
+              
           />
 
         </View>
