@@ -11,34 +11,32 @@ import { PieChart } from 'react-native-chart-kit';
 import { Dimensions } from 'react-native';
 import { getTransactions } from '../database/transaction';
 import { useFocusEffect } from '@react-navigation/native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 const screenWidth = Dimensions.get('window').width;
 
 const About = () => {
-  const [activeTopTab, setActiveTopTab] = useState('monthly'); // Hàng Tháng / Hàng Năm
-  const [currentDate, setCurrentDate] = useState(new Date());
+  const [startDate, setStartDate] = useState(null); // Ngày bắt đầu
+  const [endDate, setEndDate] = useState(null); // Ngày kết thúc
+  const [showStartPicker, setShowStartPicker] = useState(false);
+  const [showEndPicker, setShowEndPicker] = useState(false);
   const [expenseCategories, setExpenseCategories] = useState([]);
   const [incomeCategories, setIncomeCategories] = useState([]);
 
   // Lấy giao dịch từ database và nhóm theo danh mục
   const fetchTransactions = () => {
     getTransactions((data) => {
-      const filteredData = filterTransactionsByDate(data, activeTopTab);
+      const filteredData = filterTransactionsByDate(data);
       groupTransactionsByCategory(filteredData);
     });
   };
 
-  // Lọc giao dịch theo tháng hoặc năm
-  const filterTransactionsByDate = (data, tab) => {
+  // Lọc giao dịch theo khoảng thời gian
+  const filterTransactionsByDate = (data) => {
     return data.filter((item) => {
       const transactionDate = new Date(item.date);
-      if (tab === 'monthly') {
-        return (
-          transactionDate.getMonth() === currentDate.getMonth() &&
-          transactionDate.getFullYear() === currentDate.getFullYear()
-        );
-      } else if (tab === 'yearly') {
-        return transactionDate.getFullYear() === currentDate.getFullYear();
+      if (startDate && endDate) {
+        return transactionDate >= startDate && transactionDate <= endDate;
       }
       return false;
     });
@@ -89,134 +87,123 @@ const About = () => {
   };
 
   // Hàm tạo màu ngẫu nhiên
-  const getRandomColor = () =>
-    `#${Math.floor(Math.random() * 16777215).toString(16)}`;
-
-  // Chuyển đổi tháng/năm
-  const changeDate = (direction) => {
-    let newDate = new Date(currentDate);
-    if (activeTopTab === 'monthly') {
-      newDate.setMonth(currentDate.getMonth() + direction);
-    } else if (activeTopTab === 'yearly') {
-      newDate.setFullYear(currentDate.getFullYear() + direction);
-    }
-    setCurrentDate(newDate);
-  };
+  const getRandomColor = () => `#${Math.floor(Math.random() * 16777215).toString(16)}`;
 
   // Sử dụng useFocusEffect để reload lại dữ liệu khi tab được bấm vào
   useFocusEffect(
     useCallback(() => {
-      console.log('Tab focused, reloading data...');
-      fetchTransactions();
-    }, [activeTopTab, currentDate])
+      if (startDate && endDate) {
+        fetchTransactions();
+      }
+    }, [startDate, endDate])
   );
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView>
-        {/* Thanh Tab (Hàng Tháng, Hàng Năm) */}
-        <View style={styles.topTabContainer}>
-          <TouchableOpacity
-            style={[
-              styles.topTab,
-              activeTopTab === 'monthly' && styles.activeTopTab,
-            ]}
-            onPress={() => setActiveTopTab('monthly')}
-          >
-            <Text
-              style={[
-                styles.topTabText,
-                activeTopTab === 'monthly' && styles.activeTopTabText,
-              ]}
-            >
-              Hàng Tháng
+        {/* Bộ chọn khoảng thời gian */}
+        <View style={styles.datePickerContainer}>
+          <TouchableOpacity onPress={() => setShowStartPicker(true)}>
+            <Text style={styles.dateText}>
+              {startDate ? `Từ: ${startDate.toLocaleDateString('vi-VN')}` : 'Chọn ngày bắt đầu'}
             </Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.topTab,
-              activeTopTab === 'yearly' && styles.activeTopTab,
-            ]}
-            onPress={() => setActiveTopTab('yearly')}
-          >
-            <Text
-              style={[
-                styles.topTabText,
-                activeTopTab === 'yearly' && styles.activeTopTabText,
-              ]}
-            >
-              Hàng Năm
+          <TouchableOpacity onPress={() => setShowEndPicker(true)}>
+            <Text style={styles.dateText}>
+              {endDate ? `Đến: ${endDate.toLocaleDateString('vi-VN')}` : 'Chọn ngày kết thúc'}
             </Text>
           </TouchableOpacity>
         </View>
+
+        {showStartPicker && (
+          <DateTimePicker
+            value={startDate || new Date()}
+            mode="date"
+            display="default"
+            onChange={(event, selectedDate) => {
+              setShowStartPicker(false);
+              if (selectedDate) setStartDate(selectedDate);
+            }}
+          />
+        )}
+
+        {showEndPicker && (
+          <DateTimePicker
+            value={endDate || new Date()}
+            mode="date"
+            display="default"
+            onChange={(event, selectedDate) => {
+              setShowEndPicker(false);
+              if (selectedDate) setEndDate(selectedDate);
+            }}
+          />
+        )}
 
         {/* Biểu đồ chi tiêu */}
-        <View style={styles.chartContainer}>
-          <Text style={styles.chartTitle}>Biểu đồ Chi Tiêu Theo Danh Mục</Text>
-          <PieChart
-            data={expenseCategories}
-            width={screenWidth - 32}
-            height={220}
-            chartConfig={{
-              color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-            }}
-            accessor="amount"
-            backgroundColor="transparent"
-            paddingLeft="15"
-            absolute
-            hasLegend={false}
-          />
-          <View style={styles.legendContainer}>
-            {expenseCategories.map((category, index) => (
-              <View key={index} style={styles.legendItem}>
-                <View
-                  style={[
-                    styles.legendColor,
-                    { backgroundColor: category.color },
-                  ]}
-                />
-                <Text style={styles.legendText}>
-                  {category.name} ({category.percentage}%):{' '}
-                  {category.amount.toLocaleString('vi-VN')}đ
-                </Text>
-              </View>
-            ))}
+        {startDate && endDate && (
+          <View style={styles.chartContainer}>
+            <Text style={styles.chartTitle}>Biểu đồ Chi Tiêu Theo Danh Mục</Text>
+            <PieChart
+              data={expenseCategories}
+              width={screenWidth - 32}
+              height={220}
+              chartConfig={{
+                color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+              }}
+              accessor="amount"
+              backgroundColor="transparent"
+              paddingLeft="15"
+              absolute
+              hasLegend={false}
+            />
+            <View style={styles.legendContainer}>
+              {expenseCategories.map((category, index) => (
+                <View key={index} style={styles.legendItem}>
+                  <View
+                    style={[styles.legendColor, { backgroundColor: category.color }]}
+                  />
+                  <Text style={styles.legendText}>
+                    {category.name} ({category.percentage}%):{' '}
+                    {category.amount.toLocaleString('vi-VN')}đ
+                  </Text>
+                </View>
+              ))}
+            </View>
           </View>
-        </View>
+        )}
 
         {/* Biểu đồ thu nhập */}
-        <View style={styles.chartContainer}>
-          <Text style={styles.chartTitle}>Biểu đồ Thu Nhập Theo Danh Mục</Text>
-          <PieChart
-            data={incomeCategories}
-            width={screenWidth - 32}
-            height={220}
-            chartConfig={{
-              color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-            }}
-            accessor="amount"
-            backgroundColor="transparent"
-            paddingLeft="15"
-            absolute
-            hasLegend={false}
-          />
-          <View style={styles.legendContainer}>
-            {incomeCategories.map((category, index) => (
-              <View key={index} style={styles.legendItem}>
-                <View
-                  style={[
-                    styles.legendColor,
-                    { backgroundColor: category.color },
-                  ]}
-                />
-                <Text style={styles.legendText}>
-                  {category.name} ({category.percentage}%):{' '}
-                  {category.amount.toLocaleString('vi-VN')}đ
-                </Text>
-              </View>
-            ))}
+        {startDate && endDate && (
+          <View style={styles.chartContainer}>
+            <Text style={styles.chartTitle}>Biểu đồ Thu Nhập Theo Danh Mục</Text>
+            <PieChart
+              data={incomeCategories}
+              width={screenWidth - 32}
+              height={220}
+              chartConfig={{
+                color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+              }}
+              accessor="amount"
+              backgroundColor="transparent"
+              paddingLeft="15"
+              absolute
+              hasLegend={false}
+            />
+            <View style={styles.legendContainer}>
+              {incomeCategories.map((category, index) => (
+                <View key={index} style={styles.legendItem}>
+                  <View
+                    style={[styles.legendColor, { backgroundColor: category.color }]}
+                  />
+                  <Text style={styles.legendText}>
+                    {category.name} ({category.percentage}%):{' '}
+                    {category.amount.toLocaleString('vi-VN')}đ
+                  </Text>
+                </View>
+              ))}
+            </View>
           </View>
-        </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -228,26 +215,17 @@ const styles = StyleSheet.create({
     backgroundColor: '#F5F5F5',
     padding: 16,
   },
-  topTabContainer: {
+  datePickerContainer: {
     flexDirection: 'row',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     marginBottom: 16,
   },
-  topTab: {
-    padding: 10,
-    marginHorizontal: 5,
-  },
-  activeTopTab: {
-    borderBottomWidth: 2,
-    borderBottomColor: '#FFA500',
-  },
-  topTabText: {
+  dateText: {
     fontSize: 16,
     color: '#333',
-  },
-  activeTopTabText: {
-    fontWeight: 'bold',
-    color: '#FFA500',
+    borderBottomWidth: 1,
+    borderBottomColor: '#CCC',
+    paddingBottom: 4,
   },
   chartContainer: {
     marginBottom: 16,

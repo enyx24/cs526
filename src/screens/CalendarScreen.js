@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   SafeAreaView,
   View,
@@ -10,6 +10,7 @@ import {
   TextInput,
 } from 'react-native';
 import { Calendar } from 'react-native-calendars';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   initializeDatabase,
   getTransactions,
@@ -20,25 +21,21 @@ import { getSourceIdByName, updateSourceAmount } from '../database/source';
 const CalendarScreen = () => {
   const [selectedDate, setSelectedDate] = useState(null);
   const [transactions, setTransactions] = useState([]);
-  const [filteredTransactions, setFilteredTransactions] = useState([]); // Danh sách giao dịch sau khi tìm kiếm
-  const [searchQuery, setSearchQuery] = useState(''); // Từ khóa tìm kiếm
+  const [filteredTransactions, setFilteredTransactions] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const [income, setIncome] = useState(0);
   const [expense, setExpense] = useState(0);
 
-  useEffect(() => {
-    initializeDatabase();
-  }, []);
-
   const calculateTotals = (date) => {
     getTransactions((allTransactions) => {
-      const filteredTransactions = allTransactions.filter(
+      const filtered = allTransactions.filter(
         (transaction) => transaction.date === date
       );
 
       let totalIncome = 0;
       let totalExpense = 0;
 
-      filteredTransactions.forEach((transaction) => {
+      filtered.forEach((transaction) => {
         if (transaction.type === 'income') {
           totalIncome += transaction.amount;
         } else if (transaction.type === 'expense') {
@@ -48,21 +45,19 @@ const CalendarScreen = () => {
 
       setIncome(totalIncome);
       setExpense(totalExpense);
-      setTransactions(filteredTransactions);
-      setFilteredTransactions(filteredTransactions); // Cập nhật danh sách ban đầu
+      setTransactions(filtered);
+      setFilteredTransactions(filtered);
     });
   };
 
   const onDayPress = (day) => {
     setSelectedDate(day.dateString);
     calculateTotals(day.dateString);
-    setSearchQuery(''); // Reset từ khóa tìm kiếm khi chọn ngày mới
+    setSearchQuery('');
   };
 
   const handleDeleteTransaction = (id) => {
-    // Lấy thông tin giao dịch trước khi xóa
-    const transactionToDelete = transactions.find((transaction) => transaction.id === id);
-    console.log('Transaction to delete:', transactionToDelete);
+    const transactionToDelete = transactions.find((t) => t.id === id);
     Alert.alert(
       'Xác nhận xóa',
       'Bạn có chắc chắn muốn xóa giao dịch này?',
@@ -75,38 +70,34 @@ const CalendarScreen = () => {
             deleteTransaction(
               id,
               () => {
-               console.log(transactionToDelete.source)
-              getSourceIdByName(
-                transactionToDelete.source,
-                (sourceData) => {
-                  console.log(sourceData)
-                  if (sourceData) {
-                    console.log('sourceData exists and is:', sourceData);
-                    const newAmount = transactionToDelete.type === 'income'
-                      ? parseInt(sourceData.amount, 10) - parseInt(transactionToDelete.amount, 10)
-                      : parseInt(sourceData.amount, 10) + parseInt(transactionToDelete.amount, 10);
+                getSourceIdByName(
+                  transactionToDelete.source,
+                  (sourceData) => {
+                    if (sourceData) {
+                      const newAmount =
+                        transactionToDelete.type === 'income'
+                          ? parseInt(sourceData.amount, 10) -
+                            parseInt(transactionToDelete.amount, 10)
+                          : parseInt(sourceData.amount, 10) +
+                            parseInt(transactionToDelete.amount, 10);
 
-                    console.log('Calculated new amount:', newAmount);
-
-                    updateSourceAmount(
-                      sourceData.id,
-                      newAmount,
-                      () => {
-                        console.log(`Updated successfully for source: ${sourceData.id}`);
-                      },
-                      (error) => {
-                        console.error('Error updating source amount:', error);
-                      }
-                    );
-                  } else {
-                    console.error('sourceData is null or undefined!');
+                      updateSourceAmount(
+                        sourceData.id,
+                        newAmount,
+                        () => {
+                          console.log('Source amount updated');
+                        },
+                        (error) => {
+                          console.error('Error updating source:', error);
+                        }
+                      );
+                    }
+                  },
+                  (error) => {
+                    console.error('Error fetching source:', error);
                   }
+                );
 
-                },
-                (error) => {
-                  console.error('Lỗi khi lấy thông tin nguồn:', error);
-                }
-              );
                 Alert.alert('Thành công', 'Giao dịch đã được xóa');
                 calculateTotals(selectedDate);
               },
@@ -123,9 +114,8 @@ const CalendarScreen = () => {
 
   const handleSearch = (query) => {
     setSearchQuery(query);
-
     if (query.trim() === '') {
-      setFilteredTransactions(transactions); // Hiển thị toàn bộ giao dịch nếu không có từ khóa
+      setFilteredTransactions(transactions);
     } else {
       const lowerCaseQuery = query.toLowerCase();
       const filtered = transactions.filter(
@@ -137,6 +127,15 @@ const CalendarScreen = () => {
       setFilteredTransactions(filtered);
     }
   };
+
+  useFocusEffect(
+    useCallback(() => {
+      initializeDatabase();
+      if (selectedDate) {
+        calculateTotals(selectedDate);
+      }
+    }, [selectedDate])
+  );
 
   return (
     <SafeAreaView style={styles.container}>
@@ -173,14 +172,15 @@ const CalendarScreen = () => {
         <View style={styles.summaryItem}>
           <Text style={styles.summaryLabel}>Tổng</Text>
           <Text
-            style={income - expense >= 0 ? styles.totalPositive : styles.totalNegative}
+            style={
+              income - expense >= 0 ? styles.totalPositive : styles.totalNegative
+            }
           >
             {(income - expense).toLocaleString('vi-VN')}đ
           </Text>
         </View>
       </View>
 
-      {/* Ô tìm kiếm */}
       <TextInput
         style={styles.searchInput}
         placeholder="Tìm kiếm giao dịch..."
@@ -201,9 +201,7 @@ const CalendarScreen = () => {
             <View style={styles.transactionActions}>
               <Text
                 style={
-                  item.type === 'income'
-                    ? styles.income
-                    : styles.expense
+                  item.type === 'income' ? styles.income : styles.expense
                 }
               >
                 {item.amount.toLocaleString('vi-VN')}đ
