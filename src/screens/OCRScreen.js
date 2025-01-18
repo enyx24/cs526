@@ -170,7 +170,7 @@ const OCRScreen = () => {
         senderReceiver: extractedSenderReceiver ? extractedSenderReceiver[0] : '',
         time: (extractedTime[(extractedTime.length == 1)? 0 : 1]) ? (extractedTime[(extractedTime.length == 1)? 0 : 1]) : '',
         date: extractedDate ? normalizeDate(extractedDate[0]) : '',
-        type: 0,
+        type: "expense",
         category: '',
         source: extractedSource ? extractedSource : '',
       });
@@ -211,7 +211,7 @@ const OCRScreen = () => {
         note: info.time || '',
         source: info.source,
         amount: parseInt(info.money, 10),
-        type: 0,
+        type: 'expense',  
         category: info.category,
       };
 

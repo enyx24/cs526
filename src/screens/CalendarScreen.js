@@ -17,6 +17,7 @@ import {
   deleteTransaction,
 } from '../database/transaction';
 import { getSourceIdByName, updateSourceAmount } from '../database/source';
+import ExportButton from '../components/ExportButton';
 
 const CalendarScreen = () => {
   const [selectedDate, setSelectedDate] = useState(null);
@@ -139,6 +140,7 @@ const CalendarScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
+      <ExportButton />
       <View style={styles.header}>
         <Text style={styles.title}>Lịch</Text>
       </View>
