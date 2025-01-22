@@ -8,6 +8,9 @@
 | Nguyễn Trọng Nhân  | 22521005  |
 
 ## Hướng dẫn cài đặt
+0. **Release [APK](https://github.com/enyx24/cs526/releases/tag/v1.0.0)**
+   - Tải về và cài đặt trên trực tiếp trên thiết bi, hoặc dùng source code như bên dưới.
+
 1. **Yêu cầu hệ thống**:
    - Docker
    - Android Debug Bridge (ADB)
