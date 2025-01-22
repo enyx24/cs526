@@ -1,79 +1,65 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# Đồ án cuối kỳ CS526: Ứng dụng quản lý chi tiêu
 
-# Getting Started
+## Thành viên nhóm
+| Tên                | MSSV      |
+|--------------------|-----------|
+| Nguyễn Thái Học    | 22520488  |
+| Nguyễn Duy Khang   | 22520619  |
+| Nguyễn Trọng Nhân  | 22521005  |
 
->**Note**: Make sure you have completed the [React Native - Environment Setup](https://reactnative.dev/docs/environment-setup) instructions till "Creating a new application" step, before proceeding.
+## Hướng dẫn cài đặt
+1. **Yêu cầu hệ thống**:
+   - Docker
+   - Android Debug Bridge (ADB)
 
-## Step 1: Start the Metro Server
+2. **Các bước cài đặt và chạy ứng dụng**:
+   - **Tạo container từ Docker image**:
+     ```bash
+     docker run -it --rm -v $(pwd):/app -w /app reactnativecommunity/react-native-android bash
+     ```
 
-First, you will need to start **Metro**, the JavaScript _bundler_ that ships _with_ React Native.
+   - **Clone repository từ GitHub**:
+     ```bash
+     git clone https://github.com/enyx24/cs526
+     cd cs526
+     ```
 
-To start Metro, run the following command from the _root_ of your React Native project:
+   - **Kết nối thiết bị Android**:
+     - Đảm bảo thiết bị đã kết nối qua USB Debug hoặc Wireless Debug 
+     - Kiểm tra kết nối:
+       ```bash
+       adb devices
+       ```
 
-```bash
-# using npm
-npm start
+   - **Cài đặt các dependency**:
+     ```bash
+     npm install
+     ```
 
-# OR using Yarn
-yarn start
-```
+   - **Khởi động ứng dụng**:
+     ```bash
+     npm start
+     ```
+     Sau đó, nhấn phím `a` để khởi chạy ứng dụng trên thiết bị Android.
 
-## Step 2: Start your Application
+## Chức năng chính
+1. **Quản lý danh mục thu/chi**:
+   - Thêm, xóa hoặc xem danh sách các danh mục thu/chi hiện tại.
 
-Let Metro Bundler run in its _own_ terminal. Open a _new_ terminal from the _root_ of your React Native project. Run the following command to start your _Android_ or _iOS_ app:
+2. **Quản lý các nguồn tiền**:
+   - Thêm, xóa hoặc xem danh sách các nguồn tiền.
 
-### For Android
+3. **Quản lý giao dịch thu/chi**:
+   - Thêm, xem, tìm kiếm hoặc xóa các giao dịch thu/chi cụ thể.
 
-```bash
-# using npm
-npm run android
+4. **Báo cáo tài chính**:
+   - Xem báo cáo tài chính trong một khoảng thời gian cụ thể.
 
-# OR using Yarn
-yarn android
-```
+5. **Nhận diện giao dịch từ ảnh chụp màn hình**:
+   - Đọc kết quả giao dịch chi tiền từ ảnh chụp màn hình chuyển khoản.
 
-### For iOS
+6. **Xuất giao dịch ra file Excel**:
+   - Xuất tất cả giao dịch thu/chi thành một file Excel để lưu trữ hoặc phân tích thêm.
 
-```bash
-# using npm
-npm run ios
-
-# OR using Yarn
-yarn ios
-```
-
-If everything is set up _correctly_, you should see your new app running in your _Android Emulator_ or _iOS Simulator_ shortly provided you have set up your emulator/simulator correctly.
-
-This is one way to run your app — you can also run it directly from within Android Studio and Xcode respectively.
-
-## Step 3: Modifying your App
-
-Now that you have successfully run the app, let's modify it.
-
-1. Open `App.tsx` in your text editor of choice and edit some lines.
-2. For **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Developer Menu** (<kbd>Ctrl</kbd> + <kbd>M</kbd> (on Window and Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (on macOS)) to see your changes!
-
-   For **iOS**: Hit <kbd>Cmd ⌘</kbd> + <kbd>R</kbd> in your iOS Simulator to reload the app and see your changes!
-
-## Congratulations! :tada:
-
-You've successfully run and modified your React Native App. :partying_face:
-
-### Now what?
-
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [Introduction to React Native](https://reactnative.dev/docs/getting-started).
-
-# Troubleshooting
-
-If you can't get this to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
-
-# Learn More
-
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+7. **Chuyển tiền giữa các nguồn tiền**:
+   - Thực hiện chuyển tiền giữa các nguồn, xem lại hoặc xóa lịch sử luân chuyển tiền.
