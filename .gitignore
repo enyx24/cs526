@@ -76,3 +76,18 @@ yarn-error.log
 # vscode
 .vscode/*
 .fake
+
+# models
+*.gguf
+
+# local environment variables
+.env
+
+# samples
+sample*
+
+# log
+*.log
+
+# __pycache__
+__pycache__/

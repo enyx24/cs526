@@ -1,0 +1,44 @@
+services:
+  llama-server:
+    env_file:
+      - .env
+    image: ghcr.io/ggml-org/llama.cpp:server
+    environment:
+      LLAMA_API_KEY: ${LLAMA_API_KEY}
+    ports:
+      - "8080:8080"
+    volumes:
+      - "./models:/models"
+    command:
+      - -m
+      - /models/qwen2.5-0.5b-instruct-q4_k_m.gguf
+      - --port
+      - "8080"
+      - --host
+      - 0.0.0.0
+      - -n
+      - "512"
+      - --api-key
+      - ${LLAMA_API_KEY}
+  # redis:
+  #   image: redis:latest
+  #   ports:
+  #     - "6379:6379"
+  #   volumes:
+  #     - redis-data:/data
+  server:
+    env_file:
+      - .env
+    image: python:3.12-slim
+    volumes:
+      - ./src:/app
+    working_dir: /app
+    command:
+      - sh
+      - -c
+      - pip install -r requirements.txt && python -u routers.py
+    ports:
+      - "8000:8000"
+    environment:
+      PYTHONUNBUFFERED: "1"
+      LLAMA_API_URL: http://llama-server:8080/v1/chat/completions
