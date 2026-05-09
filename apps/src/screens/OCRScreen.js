@@ -13,35 +13,24 @@ const results = [];
 
 
 
-// Hàm yêu cầu quyền truy cập ảnh
 const requestStoragePermission = async () => {
   if (Platform.OS === 'android') {
+    if (Platform.Version >= 33) {
+      return true;
+    }
+
     try {
-      if (Platform.Version >= 33) {
-        const granted = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES,
-          {
-            title: 'Storage Permission',
-            message: 'Ứng dụng cần quyền để chọn ảnh.',
-            buttonNeutral: 'Hỏi lại sau',
-            buttonNegative: 'Hủy',
-            buttonPositive: 'Đồng ý',
-          }
-        );
-        return granted === PermissionsAndroid.RESULTS.GRANTED;
-      } else {
-        const granted = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
-          {
-            title: 'Storage Permission',
-            message: 'Ứng dụng cần quyền để chọn ảnh.',
-            buttonNeutral: 'Hỏi lại sau',
-            buttonNegative: 'Hủy',
-            buttonPositive: 'Đồng ý',
-          }
-        );
-        return granted === PermissionsAndroid.RESULTS.GRANTED;
-      }
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
+        {
+          title: 'Storage Permission',
+          message: 'Ứng dụng cần quyền để chọn ảnh.',
+          buttonNeutral: 'Hỏi lại sau',
+          buttonNegative: 'Hủy',
+          buttonPositive: 'Đồng ý',
+        }
+      );
+      return granted === PermissionsAndroid.RESULTS.GRANTED;
     } catch (err) {
       console.warn(err);
       return false;
@@ -147,7 +136,7 @@ const OCRScreen = () => {
 
     for (let image of images) {
       const ocrResult = await performOCR(image.uri);
-      // console.log('OCR Result:', ocrResult);
+      console.log('OCR Result:', ocrResult);
       results.push(ocrResult);
 
       ocrResult.forEach(item => {
