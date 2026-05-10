@@ -6,6 +6,9 @@ import CategoryDropdown from '../components/CategoryDropdown';
 import SourceDropdown from '../components/SourceDropdown';
 import { addTransaction } from '../database/transaction';
 import { updateSourceAmount, getSourceIdByName } from '../database/source';
+import { loadAllCategories } from '../database/category';
+import { loadSources } from '../database/source';
+import { slmExtractedInfo } from '../services/slmExtraction';
 import checkBank from '../utils/checkBank';
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window'); // Lấy chiều rộng và chiều cao màn hình
 
@@ -55,6 +58,22 @@ const normalizeDate = (date) => {
 const normalizeMoney = (money) => {
   // Lọc ra chỉ những ký tự số, đồng thời loại bỏ các ký tự không cần thiết (chữ cái, dấu chấm, khoảng trắng, v.v.)
   return money.replace(/[^0-9]/g, '');
+};
+
+const getParseContext = async () => {
+  const [categoriesMap, sourcesList] = await Promise.all([
+    new Promise((resolve) => {
+      loadAllCategories(resolve);
+    }),
+    new Promise((resolve) => {
+      loadSources(resolve);
+    }),
+  ]);
+
+  return {
+    categories: Object.values(categoriesMap || {}),
+    sources: (sourcesList || []).map((item) => item.name),
+  };
 };
 
 
@@ -152,7 +171,23 @@ const OCRScreen = () => {
       const extractedTime = text.match(regexTime);
       const extractedDate = text.match(regexDate);
       const extractedSource = checkBank(text);
-      console.log('abcd: ', extractedSource);  
+      console.log('Regex Source: ', extractedSource);
+
+      const parseContext = await getParseContext();
+      const slmExtracted = await slmExtractedInfo({
+        ocrResult: text,
+        ocrResultRegex: {
+          money: extractedMoney ? extractedMoney[0] : '',
+          senderReceiver: extractedSenderReceiver ? extractedSenderReceiver[0] : '',
+          time: extractedTime ? extractedTime[(extractedTime.length === 1) ? 0 : 1] : '',
+          date: extractedDate ? extractedDate[0] : '',
+          source: extractedSource ? extractedSource : '',
+        },
+        categories: parseContext.categories,
+        sources: parseContext.sources,
+      });
+
+      console.log('SLM Parse Result:', slmExtracted);
 
       extractedData.push({
         money: extractedMoney ? normalizeMoney(extractedMoney[0]) : '',

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -6,12 +6,20 @@ import CalendarScreen from './src/screens/CalendarScreen';
 import HomeScreen from './src/screens/HomeScreen';
 import AboutScreen from './src/screens/AboutScreen';
 import SourceScreen from './src/screens/SourceScreen';
-import OCRButton from './src/components/OCRButton';  // Import OCRButton
+import OCRButton from './src/components/OCRButton';
 import OCRScreen from './src/screens/OCRScreen';
+import { logConfig, slmHealthCheck } from './src/services/slmExtraction';
 
 const Tab = createBottomTabNavigator();
 
 export default function App() {
+  useEffect(() => {
+    logConfig();
+    slmHealthCheck().then((isHealthy) => {
+      console.log('SLM Health Status:', isHealthy ? 'Healthy' : 'Unhealthy');
+    });
+  }, []);
+
   return (
     <NavigationContainer>
       <Tab.Navigator
