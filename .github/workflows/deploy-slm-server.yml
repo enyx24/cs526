@@ -44,13 +44,16 @@ jobs:
       - name: Write compose env file
         env:
           LLAMA_API_KEY: ${{ secrets.LLAMA_API_KEY }}
+          SERVER_API_KEY: ${{ secrets.SERVER_API_KEY }}
           MODEL_NAME: ${{ vars.MODEL_NAME }}
         run: |
           : "${LLAMA_API_KEY:?Set the LLAMA_API_KEY secret}"
+          : "${SERVER_API_KEY:?Set the SERVER_API_KEY secret}"
           : "${MODEL_NAME:=qwen2.5-0.5b-instruct-q4_k_m.gguf}"
 
           cat > services/.env <<EOF
           LLAMA_API_KEY=${LLAMA_API_KEY}
+          SERVER_API_KEY=${SERVER_API_KEY}
           MODEL_NAME=${MODEL_NAME}
           EOF
 

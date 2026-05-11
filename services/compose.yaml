@@ -37,8 +37,8 @@ services:
       - sh
       - -c
       - pip install -r requirements.txt && python -u routers.py
-    # ports:
-    #   - "8000:8000"
+    ports:
+      - "8000:8000"
     environment:
       PYTHONUNBUFFERED: "1"
       LLAMA_API_URL: http://llama-server:8080/v1/chat/completions
