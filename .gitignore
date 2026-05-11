@@ -91,3 +91,6 @@ sample*
 
 # __pycache__
 __pycache__/
+
+# ignore logs
+services/src/logs/
