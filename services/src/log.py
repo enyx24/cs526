@@ -17,7 +17,7 @@ def get_logger(name: str = "services") -> logging.Logger:
     # Only configure if handlers don't exist (avoid duplicate handlers)
     if not logger.handlers:
         # Create logs directory if it doesn't exist
-        log_dir = "logs"
+        log_dir = "/var/app/logs"
         if not os.path.exists(log_dir):
             os.makedirs(log_dir)
         
