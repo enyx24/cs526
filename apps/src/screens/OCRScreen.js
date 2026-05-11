@@ -189,14 +189,20 @@ const OCRScreen = () => {
 
       console.log('SLM Parse Result:', slmExtracted);
 
+      const parsedMoney = slmExtracted?.amount ? normalizeMoney(String(slmExtracted.amount)) : '';
+      const parsedDate = slmExtracted?.date ? normalizeDate(String(slmExtracted.date)) : '';
+      const parsedTime = slmExtracted?.time ? String(slmExtracted.time) : '';
+      const parsedCategory = slmExtracted?.category ? String(slmExtracted.category) : '';
+      const parsedSource = slmExtracted?.source ? String(slmExtracted.source) : '';
+
       extractedData.push({
-        money: extractedMoney ? normalizeMoney(extractedMoney[0]) : '',
+        money: parsedMoney || (extractedMoney ? normalizeMoney(extractedMoney[0]) : ''),
         senderReceiver: extractedSenderReceiver ? extractedSenderReceiver[0] : '',
-        time: (extractedTime[(extractedTime.length == 1)? 0 : 1]) ? (extractedTime[(extractedTime.length == 1)? 0 : 1]) : '',
-        date: extractedDate ? normalizeDate(extractedDate[0]) : '',
+        time: parsedTime || ((extractedTime[(extractedTime.length == 1)? 0 : 1]) ? (extractedTime[(extractedTime.length == 1)? 0 : 1]) : ''),
+        date: parsedDate || (extractedDate ? normalizeDate(extractedDate[0]) : ''),
         type: "expense",
-        category: '',
-        source: extractedSource ? extractedSource : '',
+        category: parsedCategory,
+        source: parsedSource || (extractedSource ? extractedSource : ''),
       });
     }
 
