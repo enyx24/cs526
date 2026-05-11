@@ -15,14 +15,14 @@
 | Nguyễn Trọng Nhân  | 22521005  |
 
 ## Hướng dẫn cài đặt
-0. **Release [APK](https://github.com/enyx24/cs526/releases/tag/v1.0.0)**
+1. **Release [APK](https://github.com/enyx24/cs526/releases/tag/v2.0.0)**
    - Tải về và cài đặt trên trực tiếp trên thiết bi, hoặc dùng source code như bên dưới.
 
-1. **Yêu cầu hệ thống**:
+2. **Yêu cầu hệ thống**:
    - Docker
    - Android Debug Bridge (ADB)
 
-2. **Các bước cài đặt và chạy ứng dụng**:
+3. **Các bước cài đặt và chạy ứng dụng**:
    - **Tạo container từ Docker image**:
      ```bash
      docker run -it --rm -v $(pwd):/app -w /app reactnativecommunity/react-native-android bash
