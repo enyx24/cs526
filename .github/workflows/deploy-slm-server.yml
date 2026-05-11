@@ -57,6 +57,16 @@ jobs:
           MODEL_NAME=${MODEL_NAME}
           EOF
 
+      - name: Docker debug 
+        run: |
+          whoami
+          groups
+          echo "DOCKER_HOST=$DOCKER_HOST"
+          which docker
+          docker version
+          docker info
+          ls -l /var/run/docker.sock
+      
       - name: Deploy with compose
         working-directory: services
         run: |
