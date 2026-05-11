@@ -13,7 +13,7 @@ concurrency:
 jobs:
   deploy:
     name: Deploy to homelab
-    runs-on: enyxhl
+    runs-on: [self-hosted, linux, x64, enyxhl]
     defaults:
       run:
         shell: bash
