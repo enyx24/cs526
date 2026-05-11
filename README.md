@@ -1,5 +1,12 @@
 # Đồ án cuối kỳ CS526: Ứng dụng quản lý chi tiêu
 
+## What's news:
+- [NEW] Chuyển từ app được thầy An nhận xét là "app làm được gì thì google sheet làm tốt hơn" sang "app làm được gì thì google sheet làm tốt hơn nhưng có services AI Backend" 
+- [NEW] Dev một services SLM BE để thực hiện parsing thay cho REGEX ở bản trước
+- [NEW] Automate workflow bằng GH Action và docker
+- [NEW] Free unlimit SLM API cho đến hiện tại, với server đảm bảo uptime 90%
+- [WIP] Metrics endpoint cho monitoring
+
 ## Thành viên nhóm
 | Tên                | MSSV      |
 |--------------------|-----------|
@@ -44,6 +51,16 @@
      npm start
      ```
      Sau đó, nhấn phím `a` để khởi chạy ứng dụng trên thiết bị Android.
+
+## Kiến trúc
+
+```
+                          ┌─────────── Docker Compose ──────────────┐
+┌───────────────────┐     │   ┌───────────┐         ┌────────────┐  │
+│  ReactNative App  │ <-----> │  Backend  │ <-----> │ LLaMa.cpp  │  │
+└───────────────────┘     │   └───────────┘         └────────────┘  │
+                          └─────────────────────────────────────────┘
+```
 
 ## Chức năng chính
 1. **Quản lý danh mục thu/chi**:
