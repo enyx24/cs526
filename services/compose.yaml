@@ -40,5 +40,6 @@ services:
     ports:
       - "8000:8000"
     environment:
+      PYTHONDONTWRITEBYTECODE: 1
       PYTHONUNBUFFERED: "1"
       LLAMA_API_URL: http://llama-server:8080/v1/chat/completions
