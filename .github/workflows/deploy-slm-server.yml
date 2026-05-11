@@ -1,0 +1,77 @@
+name: Deploy SLM Server
+
+on:
+  push:
+    branches:
+      - development
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-slm-server-development
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Deploy to homelab
+    runs-on: self-hosted
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: cleanup pycache
+        run: |
+          find . -type d -name "__pycache__" -exec rm -rf {} +
+          find . -name "*.pyc" -delete
+      - name: Checkout development
+        uses: actions/checkout@v4
+        with:
+          ref: development
+          fetch-depth: 0
+
+      - name: Sync local branch
+        run: |
+          git fetch origin development
+          git checkout -B development origin/development
+          git pull --ff-only origin development
+
+      - name: Prepare models directory
+        run: |
+          if [ ! -d "$HOME/models" ]; then
+            echo "Missing $HOME/models on the runner."
+            exit 1
+          fi
+
+          rm -rf services/models
+          mkdir -p services/models
+          cp -a "$HOME/models/." services/models/
+
+      - name: Write compose env file
+        env:
+          LLAMA_API_KEY: ${{ secrets.LLAMA_API_KEY }}
+          SERVER_API_KEY: ${{ secrets.SERVER_API_KEY }}
+          MODEL_NAME: ${{ vars.MODEL_NAME }}
+        run: |
+          : "${LLAMA_API_KEY:?Set the LLAMA_API_KEY secret}"
+          : "${SERVER_API_KEY:?Set the SERVER_API_KEY secret}"
+          : "${MODEL_NAME:=qwen2.5-0.5b-instruct-q4_k_m.gguf}"
+
+          cat > services/.env <<EOF
+          LLAMA_API_KEY=${LLAMA_API_KEY}
+          SERVER_API_KEY=${SERVER_API_KEY}
+          MODEL_NAME=${MODEL_NAME}
+          EOF
+
+      - name: Docker debug 
+        run: |
+          whoami
+          groups
+          echo "DOCKER_HOST=$DOCKER_HOST"
+          which docker
+          docker version
+          docker info
+          ls -l /var/run/docker.sock
+      
+      - name: Deploy with compose
+        working-directory: services
+        run: |
+          docker compose up -d --pull always --remove-orphans --force-recreate

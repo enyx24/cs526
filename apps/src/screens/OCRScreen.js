@@ -6,6 +6,9 @@ import CategoryDropdown from '../components/CategoryDropdown';
 import SourceDropdown from '../components/SourceDropdown';
 import { addTransaction } from '../database/transaction';
 import { updateSourceAmount, getSourceIdByName } from '../database/source';
+import { loadAllCategories } from '../database/category';
+import { loadSources } from '../database/source';
+import { slmExtractedInfo } from '../services/slmExtraction';
 import checkBank from '../utils/checkBank';
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window'); // Lấy chiều rộng và chiều cao màn hình
 
@@ -13,35 +16,24 @@ const results = [];
 
 
 
-// Hàm yêu cầu quyền truy cập ảnh
 const requestStoragePermission = async () => {
   if (Platform.OS === 'android') {
+    if (Platform.Version >= 33) {
+      return true;
+    }
+
     try {
-      if (Platform.Version >= 33) {
-        const granted = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES,
-          {
-            title: 'Storage Permission',
-            message: 'Ứng dụng cần quyền để chọn ảnh.',
-            buttonNeutral: 'Hỏi lại sau',
-            buttonNegative: 'Hủy',
-            buttonPositive: 'Đồng ý',
-          }
-        );
-        return granted === PermissionsAndroid.RESULTS.GRANTED;
-      } else {
-        const granted = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
-          {
-            title: 'Storage Permission',
-            message: 'Ứng dụng cần quyền để chọn ảnh.',
-            buttonNeutral: 'Hỏi lại sau',
-            buttonNegative: 'Hủy',
-            buttonPositive: 'Đồng ý',
-          }
-        );
-        return granted === PermissionsAndroid.RESULTS.GRANTED;
-      }
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
+        {
+          title: 'Storage Permission',
+          message: 'Ứng dụng cần quyền để chọn ảnh.',
+          buttonNeutral: 'Hỏi lại sau',
+          buttonNegative: 'Hủy',
+          buttonPositive: 'Đồng ý',
+        }
+      );
+      return granted === PermissionsAndroid.RESULTS.GRANTED;
     } catch (err) {
       console.warn(err);
       return false;
@@ -66,6 +58,22 @@ const normalizeDate = (date) => {
 const normalizeMoney = (money) => {
   // Lọc ra chỉ những ký tự số, đồng thời loại bỏ các ký tự không cần thiết (chữ cái, dấu chấm, khoảng trắng, v.v.)
   return money.replace(/[^0-9]/g, '');
+};
+
+const getParseContext = async () => {
+  const [categoriesMap, sourcesList] = await Promise.all([
+    new Promise((resolve) => {
+      loadAllCategories(resolve);
+    }),
+    new Promise((resolve) => {
+      loadSources(resolve);
+    }),
+  ]);
+
+  return {
+    categories: Object.values(categoriesMap || {}),
+    sources: (sourcesList || []).map((item) => item.name),
+  };
 };
 
 
@@ -147,7 +155,7 @@ const OCRScreen = () => {
 
     for (let image of images) {
       const ocrResult = await performOCR(image.uri);
-      // console.log('OCR Result:', ocrResult);
+      console.log('OCR Result:', ocrResult);
       results.push(ocrResult);
 
       ocrResult.forEach(item => {
@@ -163,16 +171,38 @@ const OCRScreen = () => {
       const extractedTime = text.match(regexTime);
       const extractedDate = text.match(regexDate);
       const extractedSource = checkBank(text);
-      console.log('abcd: ', extractedSource);  
+      console.log('Regex Source: ', extractedSource);
+
+      const parseContext = await getParseContext();
+      const slmExtracted = await slmExtractedInfo({
+        ocrResult: text,
+        ocrResultRegex: {
+          money: extractedMoney ? extractedMoney[0] : '',
+          senderReceiver: extractedSenderReceiver ? extractedSenderReceiver[0] : '',
+          time: extractedTime ? extractedTime[(extractedTime.length === 1) ? 0 : 1] : '',
+          date: extractedDate ? extractedDate[0] : '',
+          source: extractedSource ? extractedSource : '',
+        },
+        categories: parseContext.categories,
+        sources: parseContext.sources,
+      });
+
+      console.log('SLM Parse Result:', slmExtracted);
+
+      const parsedMoney = slmExtracted?.amount ? normalizeMoney(String(slmExtracted.amount)) : '';
+      const parsedDate = slmExtracted?.date ? normalizeDate(String(slmExtracted.date)) : '';
+      const parsedTime = slmExtracted?.time ? String(slmExtracted.time) : '';
+      const parsedCategory = slmExtracted?.category ? String(slmExtracted.category) : '';
+      const parsedSource = slmExtracted?.source ? String(slmExtracted.source) : '';
 
       extractedData.push({
-        money: extractedMoney ? normalizeMoney(extractedMoney[0]) : '',
+        money: parsedMoney || (extractedMoney ? normalizeMoney(extractedMoney[0]) : ''),
         senderReceiver: extractedSenderReceiver ? extractedSenderReceiver[0] : '',
-        time: (extractedTime[(extractedTime.length == 1)? 0 : 1]) ? (extractedTime[(extractedTime.length == 1)? 0 : 1]) : '',
-        date: extractedDate ? normalizeDate(extractedDate[0]) : '',
+        time: parsedTime || ((extractedTime[(extractedTime.length == 1)? 0 : 1]) ? (extractedTime[(extractedTime.length == 1)? 0 : 1]) : ''),
+        date: parsedDate || (extractedDate ? normalizeDate(extractedDate[0]) : ''),
         type: "expense",
-        category: '',
-        source: extractedSource ? extractedSource : '',
+        category: parsedCategory,
+        source: parsedSource || (extractedSource ? extractedSource : ''),
       });
     }
 
