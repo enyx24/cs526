@@ -138,6 +138,12 @@ export const slmHealthCheck = async () => {
 
 export const slmExtractedInfo = async ({ ocrResult, ocrResultRegex, categories, sources }) => {
     try {
+        // Convert all fields to strings
+        const stringifiedOcrResult = typeof ocrResult === 'string' ? ocrResult : JSON.stringify(ocrResult);
+        const stringifiedOcrResultRegex = typeof ocrResultRegex === 'string' ? ocrResultRegex : JSON.stringify(ocrResultRegex);
+        const stringifiedCategories = typeof categories === 'string' ? categories : JSON.stringify(categories);
+        const stringifiedSources = typeof sources === 'string' ? sources : JSON.stringify(sources);
+
         const response = await fetch(`${serverConfig.API_URL}/parse`, {
             method: 'POST',
             headers: {
@@ -145,10 +151,10 @@ export const slmExtractedInfo = async ({ ocrResult, ocrResultRegex, categories, 
                 'Authorization': `Bearer ${serverConfig.API_KEY}`,
             },
             body: JSON.stringify({
-                ocr_result: ocrResult,
-                ocr_result_regex: ocrResultRegex,
-                categories,
-                sources,
+                ocr_result: stringifiedOcrResult,
+                ocr_result_regex: stringifiedOcrResultRegex,
+                categories: stringifiedCategories,
+                sources: stringifiedSources,
             }),
         });
 
@@ -160,12 +166,16 @@ export const slmExtractedInfo = async ({ ocrResult, ocrResultRegex, categories, 
         const parsedResponse = normalizeSlmResponse(rawResponse);
 
         if (!parsedResponse) {
-            return buildFallbackResponse({ ocrResultRegex });
+            // Parse ocrResultRegex if it's a string
+            const parsedOcrResultRegex = typeof ocrResultRegex === 'string' ? tryParseJsonLikeValue(ocrResultRegex) : ocrResultRegex;
+            return buildFallbackResponse({ ocrResultRegex: parsedOcrResultRegex });
         }
 
         return parsedResponse;
     } catch (error) {
         console.error('Error in slmExtractedInfo:', error);
-        return buildFallbackResponse({ ocrResultRegex });
+        // Parse ocrResultRegex if it's a string
+        const parsedOcrResultRegex = typeof ocrResultRegex === 'string' ? tryParseJsonLikeValue(ocrResultRegex) : ocrResultRegex;
+        return buildFallbackResponse({ ocrResultRegex: parsedOcrResultRegex });
     }
 }

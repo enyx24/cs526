@@ -20,12 +20,16 @@ services:
       - "512"
       - --api-key
       - ${LLAMA_API_KEY}
-  # redis:
-  #   image: redis:latest
-  #   ports:
-  #     - "6379:6379"
-  #   volumes:
-  #     - redis-data:/data
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command:
+      - redis-server
+      - --appendonly
+      - "yes"
   server:
     env_file:
       - .env
@@ -39,7 +43,26 @@ services:
       - pip install -r requirements.txt && python -u routers.py
     ports:
       - "8000:8000"
+    restart: unless-stopped
+    depends_on:
+      - llama-server
+      - redis
     environment:
       PYTHONDONTWRITEBYTECODE: 1
       PYTHONUNBUFFERED: "1"
       LLAMA_API_URL: http://llama-server:8080/v1/chat/completions
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+      CACHE_TTL_SECONDS: ${CACHE_TTL_SECONDS:-3600}
+
+# No need for this, I have a separate prometheus instance running on my host machine
+  # prometheus:
+  #   image: prom/prometheus:latest
+  #   volumes:
+  #     - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+  #     - prometheus_data:/prometheus
+  #   ports:
+  #     - "9090:9090"
+
+volumes:
+  redis-data:
+  # prometheus_data:

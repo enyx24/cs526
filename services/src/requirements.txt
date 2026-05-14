@@ -1,5 +1,7 @@
 fastapi
-requests
+httpx
 pydantic
 python-dotenv
 uvicorn
+redis>=4.6.0
+prometheus_client

@@ -1,5 +1,6 @@
 from sqlite3 import Connection, connect
 from log import get_logger
+from models import ParsedData
 logger = get_logger("db")
 
 def get_db_connection() -> Connection:
@@ -40,18 +41,34 @@ def create_db_schema() -> None:
     """)
     if cursor.rowcount == 0:
         logger.info("Table 'parsed_data' created successfully.")
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS parsed_results_cache(
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            parsed_data_id INTEGER NOT NULL,
-            sender TEXT NOT NULL,
-            hash TEXT NOT NULL,
-        )
-    """)
-    if cursor.rowcount == 0:
-        logger.info("Table 'parsed_results_cache' created successfully.")
+    # cursor.execute("""
+    #     CREATE TABLE IF NOT EXISTS parsed_results_cache(
+    #         id INTEGER PRIMARY KEY AUTOINCREMENT,
+    #         parsed_data_id INTEGER NOT NULL,
+    #         sender TEXT NOT NULL,
+    #         hash TEXT NOT NULL,
+    #     )
+    # """)
+    # if cursor.rowcount == 0:
+    #     logger.info("Table 'parsed_results_cache' created successfully.")
     conn.commit()
 
-# TODO - Add functions for inserting parsed data, retrieving cached results, and storing metrics
-def insert_parsed_data(original_text: str, parsed_text: str, created_at: str) -> int:
-    pass
+
+async def insert_parsed_data(parsed_data: ParsedData) -> int:
+    """
+    Insert parsed data into the database.
+
+    Args:
+        parsed_data (ParsedData): The parsed data to insert.
+
+    Returns:
+        int: The ID of the inserted record.
+    """
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT INTO parsed_data (original_text, parsed_text, created_at)
+        VALUES (?, ?, ?)
+    """, (parsed_data.original_text, parsed_data.parsed_text, parsed_data.created_at))
+    conn.commit()
+    logger.info("Inserted parsed data into database with ID: %d", cursor.lastrowid)
+    return cursor.lastrowid
