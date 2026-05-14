@@ -30,13 +30,7 @@ class ParseMetrics:
     confidence: float
 
 @dataclass(frozen=True)
-class ParsedResultCache:
-    uuid: str
-    sender: str
-    hash: str
-
-@dataclass(frozen=True)
-class ParseData:
+class ParsedData:
     uuid: str
     original_text: str
     parsed_text: str

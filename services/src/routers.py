@@ -5,7 +5,7 @@ from fastapi import FastAPI, Header, HTTPException, status
 
 from log import get_logger
 from models import ParseRequest
-from services.slm_server import call_llama_api
+from services.slm_server import parse_ocr_text
 from services.auth import require_api_key
 
 
@@ -28,9 +28,9 @@ def health_check():
     return {"status": "healthy"}
 
 @app.post("/parse")
-def parse_text(request: ParseRequest, timeout: int = 30, authorization: str | None = Header(default=None)):
+async def parse_text(request: ParseRequest, timeout: int = 30, authorization: str | None = Header(default=None)):
     require_api_key(authorization)
-    result = call_llama_api(
+    result = await parse_ocr_text(
         ocr_result=request.ocr_result,
         ocr_result_regex=request.ocr_result_regex,
         categories=request.categories,
