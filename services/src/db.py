@@ -1,6 +1,6 @@
 from sqlite3 import Connection, connect
 from log import get_logger
-from services.src.models import ParsedData
+from models import ParsedData
 logger = get_logger("db")
 
 def get_db_connection() -> Connection:

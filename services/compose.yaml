@@ -43,6 +43,8 @@ services:
       - pip install -r requirements.txt && python -u routers.py
     ports:
       - "8000:8000"
+      - "9090:9090"
+    restart: unless-stopped
     depends_on:
       - llama-server
       - redis
@@ -53,5 +55,15 @@ services:
       REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
       CACHE_TTL_SECONDS: ${CACHE_TTL_SECONDS:-3600}
 
+# No need for this, I have a separate prometheus instance running on my host machine
+  # prometheus:
+  #   image: prom/prometheus:latest
+  #   volumes:
+  #     - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+  #     - prometheus_data:/prometheus
+  #   ports:
+  #     - "9090:9090"
+
 volumes:
   redis-data:
+  # prometheus_data:
