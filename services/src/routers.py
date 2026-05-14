@@ -1,5 +1,6 @@
 
 import uvicorn
+import time
 
 from fastapi import FastAPI, Header, HTTPException, status
 from fastapi.responses import PlainTextResponse
@@ -8,7 +9,8 @@ from log import get_logger
 from models import ParseRequest
 from services.slm_server import parse_ocr_text
 from services.auth import require_api_key
-from metrics import get_metrics_text
+from metrics import get_metrics_text, increment_request, observe_request_latency
+from db import create_db_schema
 
 
 
@@ -18,6 +20,14 @@ logger = get_logger("server")
 
 logger.info("Starting the server...")
 app = FastAPI()
+
+
+@app.on_event("startup")
+def startup_event():
+    """Initialize database schema on server startup."""
+    logger.info("Initializing database schema...")
+    create_db_schema()
+    logger.info("Database schema initialized.")
 
 
 
@@ -36,6 +46,7 @@ def metrics():
 @app.post("/parse")
 async def parse_text(request: ParseRequest, timeout: int = 30, authorization: str | None = Header(default=None)):
     import json
+    start_time = time.time()
     require_api_key(authorization)
     
     # Parse categories and sources from strings back to lists
@@ -56,6 +67,12 @@ async def parse_text(request: ParseRequest, timeout: int = 30, authorization: st
         sources=sources,
         timeout=timeout
     )
+    
+    # Record metrics
+    elapsed = (time.time() - start_time) * 1000  # Convert to milliseconds
+    increment_request()
+    observe_request_latency(elapsed)
+    
     return result
 
 

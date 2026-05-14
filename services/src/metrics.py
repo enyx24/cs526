@@ -3,11 +3,11 @@ from log import get_logger
 logger = get_logger("metrics")
 
 REQUEST_COUNT = Counter('parse_requests_total', 'Total number of parse requests')
-REQUEST_LATENCY = Histogram('parse_request_latency_seconds', 'Latency of parse requests in seconds')
-SLM_LATENCY = Histogram('slm_api_latency_seconds', 'Latency of LLaMA API calls in seconds')
+REQUEST_LATENCY = Histogram('parse_request_latency_milliseconds', 'Latency of parse requests in milliseconds')
+SLM_LATENCY = Histogram('slm_api_latency_milliseconds', 'Latency of LLaMA API calls in milliseconds')
 CACHE_HITS = Counter('cache_hits_total', 'Total number of cache hits')
 CACHE_MISSES = Counter('cache_misses_total', 'Total number of cache misses')
-CACHE_LATENCY = Histogram('cache_latency_seconds', 'Latency of cache operations in seconds')
+CACHE_LATENCY = Histogram('cache_latency_milliseconds', 'Latency of cache operations in milliseconds')
 MEMORY_USAGE = Histogram('memory_usage_bytes', 'Memory usage of the application in bytes')
 
 logger.info("Metrics initialized - expose /metrics on FastAPI port 8000")
@@ -17,12 +17,12 @@ def increment_request(count: int = 1):
 	REQUEST_COUNT.inc(count)
 
 
-def observe_request_latency(seconds: float):
-	REQUEST_LATENCY.observe(seconds)
+def observe_request_latency(milliseconds: float):
+	REQUEST_LATENCY.observe(milliseconds)
 
 
-def observe_slm_latency(seconds: float):
-	SLM_LATENCY.observe(seconds)
+def observe_slm_latency(milliseconds: float):
+	SLM_LATENCY.observe(milliseconds)
 
 
 def increment_cache_hit(count: int = 1):
@@ -33,8 +33,8 @@ def increment_cache_miss(count: int = 1):
 	CACHE_MISSES.inc(count)
 
 
-def observe_cache_latency(seconds: float):
-	CACHE_LATENCY.observe(seconds)
+def observe_cache_latency(milliseconds: float):
+	CACHE_LATENCY.observe(milliseconds)
 
 
 def observe_memory_usage(bytes_used: float):
@@ -54,11 +54,11 @@ def calculate_all_metrics():
 	"""
 	wanted = {
 		'parse_requests_total',
-		'parse_request_latency_seconds',
-		'slm_api_latency_seconds',
+		'parse_request_latency_milliseconds',
+		'slm_api_latency_milliseconds',
 		'cache_hits_total',
 		'cache_misses_total',
-		'cache_latency_seconds',
+		'cache_latency_milliseconds',
 		'memory_usage_bytes',
 	}
 

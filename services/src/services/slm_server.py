@@ -2,6 +2,7 @@ from dotenv import load_dotenv
 import os
 import httpx
 import hashlib
+import time
 from log import get_logger
 from constants import SYSTEM_PROMPT, USER_PROMPT
 import json
@@ -10,6 +11,7 @@ from redis.exceptions import RedisError
 from models import ParsedData
 from datetime import datetime
 from db import insert_parsed_data
+from metrics import increment_cache_hit, increment_cache_miss, observe_slm_latency
 logger = get_logger("slm_server")
 load_dotenv()
 LLAMA_API_KEY = os.getenv("LLAMA_API_KEY")
@@ -82,11 +84,12 @@ async def call_llama_api(ocr_result: str, ocr_result_regex: str, categories: lis
     }
     
     try:
-        # TODO - Add latency measurement for the API call
-        # start_time = logger.info("Sending request to LLaMA API...")
+        start_time = time.time()
         async with httpx.AsyncClient() as client:
             response = await client.post(url, json=payload, headers=headers, timeout=timeout)
-        logger.info("Response status from LLaMA API: %s", response.status_code)
+        elapsed = (time.time() - start_time) * 1000  # Convert to milliseconds
+        observe_slm_latency(elapsed)
+        logger.info("Response status from LLaMA API: %s (latency: %.2fs)", response.status_code, elapsed)
         response.raise_for_status()
         result = response.json()
         parsed_text = json.dumps(result.get("choices", [{}])[0].get("message", {}).get("content", ""))
@@ -106,7 +109,10 @@ async def check_cache(ocr_result: str, ocr_result_regex: str, categories: list, 
         cached = await client.get(cache_key)
         if cached:
             logger.info("Cache hit: %s", cache_key)
+            increment_cache_hit()
             return cached
+        else:
+            increment_cache_miss()
     except RedisError as e:
         logger.warning("Redis read failed: %s", e)
     return None
@@ -138,10 +144,10 @@ async def parse_ocr_text(ocr_result: str, ocr_result_regex: str, categories: lis
     )
     if result:
         await write_cache(ocr_result, ocr_result_regex, categories, sources, result)
-        # await insert_parsed_data(ParsedData(
-        #     uuid=build_cache_key(ocr_result, ocr_result_regex, categories, sources),
-        #     original_text=ocr_result,
-        #     parsed_text=result,
-        #     created_at=datetime.utcnow().isoformat()
-        # ))
+        await insert_parsed_data(ParsedData(
+            uuid=build_cache_key(ocr_result, ocr_result_regex, categories, sources),
+            original_text=ocr_result,
+            parsed_text=result,
+            created_at=datetime.utcnow().isoformat()
+        ))
     return result
