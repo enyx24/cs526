@@ -2,11 +2,13 @@
 import uvicorn
 
 from fastapi import FastAPI, Header, HTTPException, status
+from fastapi.responses import PlainTextResponse
 
 from log import get_logger
 from models import ParseRequest
 from services.slm_server import parse_ocr_text
 from services.auth import require_api_key
+from metrics import get_metrics_text
 
 
 
@@ -26,6 +28,10 @@ def root():
 @app.get("/health")
 def health_check():
     return {"status": "healthy"}
+
+@app.get("/metrics")
+def metrics():
+    return PlainTextResponse(get_metrics_text(), media_type="text/plain; version=0.0.4")
 
 @app.post("/parse")
 async def parse_text(request: ParseRequest, timeout: int = 30, authorization: str | None = Header(default=None)):

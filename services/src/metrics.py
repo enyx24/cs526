@@ -1,4 +1,4 @@
-from prometheus_client import Counter, Histogram, start_http_server, REGISTRY
+from prometheus_client import Counter, Histogram, REGISTRY, generate_latest, CollectorRegistry
 from log import get_logger
 logger = get_logger("metrics")
 
@@ -10,9 +10,7 @@ CACHE_MISSES = Counter('cache_misses_total', 'Total number of cache misses')
 CACHE_LATENCY = Histogram('cache_latency_seconds', 'Latency of cache operations in seconds')
 MEMORY_USAGE = Histogram('memory_usage_bytes', 'Memory usage of the application in bytes')
 
-# Start the Prometheus metrics server
-start_http_server(9191)
-logger.info("Prometheus metrics server started on port 9191")
+logger.info("Metrics initialized - expose /metrics on FastAPI port 8000")
 
 
 def increment_request(count: int = 1):
@@ -41,6 +39,11 @@ def observe_cache_latency(seconds: float):
 
 def observe_memory_usage(bytes_used: float):
 	MEMORY_USAGE.observe(bytes_used)
+
+
+def get_metrics_text():
+	"""Return metrics in Prometheus text format for /metrics endpoint."""
+	return generate_latest(REGISTRY).decode('utf-8')
 
 
 def calculate_all_metrics():
