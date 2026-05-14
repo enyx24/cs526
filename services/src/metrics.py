@@ -11,8 +11,8 @@ CACHE_LATENCY = Histogram('cache_latency_seconds', 'Latency of cache operations 
 MEMORY_USAGE = Histogram('memory_usage_bytes', 'Memory usage of the application in bytes')
 
 # Start the Prometheus metrics server
-start_http_server(9090)
-logger.info("Prometheus metrics server started on port 9090")
+start_http_server(9191)
+logger.info("Prometheus metrics server started on port 9191")
 
 
 def increment_request(count: int = 1):
