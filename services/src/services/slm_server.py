@@ -137,11 +137,11 @@ async def parse_ocr_text(ocr_result: str, ocr_result_regex: str, categories: lis
         timeout=timeout,
     )
     if result:
-        await write_cache()
-        await insert_parsed_data(ParsedData(
-            uuid=build_cache_key(ocr_result, ocr_result_regex, categories, sources),
-            original_text=ocr_result,
-            parsed_text=result,
-            created_at=datetime.utcnow().isoformat()
-        ))
+        await write_cache(ocr_result, ocr_result_regex, categories, sources, result)
+        # await insert_parsed_data(ParsedData(
+        #     uuid=build_cache_key(ocr_result, ocr_result_regex, categories, sources),
+        #     original_text=ocr_result,
+        #     parsed_text=result,
+        #     created_at=datetime.utcnow().isoformat()
+        # ))
     return result

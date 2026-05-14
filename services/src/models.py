@@ -1,14 +1,14 @@
 import pydantic
 from dataclasses import dataclass
+from typing import List, Optional
 
 
-@dataclass(frozen=True)
-class ParseRequest:
+class ParseRequest(pydantic.BaseModel):
     ocr_result: str
     ocr_result_regex: str
-    categories: list
-    sources: list
-    uuid: str | None = None
+    categories: str
+    sources: str
+    uuid: Optional[str] = None
 
 @dataclass(frozen=True)
 class ParsedResult:

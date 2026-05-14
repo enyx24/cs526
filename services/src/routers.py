@@ -35,12 +35,25 @@ def metrics():
 
 @app.post("/parse")
 async def parse_text(request: ParseRequest, timeout: int = 30, authorization: str | None = Header(default=None)):
+    import json
     require_api_key(authorization)
+    
+    # Parse categories and sources from strings back to lists
+    try:
+        categories = json.loads(request.categories) if isinstance(request.categories, str) else request.categories
+    except (json.JSONDecodeError, TypeError):
+        categories = []
+    
+    try:
+        sources = json.loads(request.sources) if isinstance(request.sources, str) else request.sources
+    except (json.JSONDecodeError, TypeError):
+        sources = []
+    
     result = await parse_ocr_text(
         ocr_result=request.ocr_result,
         ocr_result_regex=request.ocr_result_regex,
-        categories=request.categories,
-        sources=request.sources,
+        categories=categories,
+        sources=sources,
         timeout=timeout
     )
     return result
