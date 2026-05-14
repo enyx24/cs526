@@ -5,7 +5,8 @@
 - [NEW] Dev một services SLM BE để thực hiện parsing thay cho REGEX ở bản trước
 - [NEW] Automate workflow bằng GH Action và docker
 - [NEW] Free unlimit SLM API cho đến hiện tại, với server đảm bảo uptime 90%
-- [WIP] Metrics endpoint cho monitoring
+- [NEW] Cache bằng Redis cho phép giảm latency từ **trung bình** 2.6s per request còn 1.36ms per request **trong trường hợp cache hit**
+- [NEW] Build /metrics endpoint cho phép prometheus scraps data, monitor bằng grafana.
 
 ## Thành viên nhóm
 | Tên                | MSSV      |
@@ -16,7 +17,7 @@
 
 ## Hướng dẫn cài đặt
 1. **Release [APK](https://github.com/enyx24/cs526/releases/tag/v2.0.0)**
-   - Tải về và cài đặt trên trực tiếp trên thiết bi, hoặc dùng source code như bên dưới.
+   - Tải về và cài đặt trên trực tiếp trên thiết bị, hoặc dùng source code như bên dưới.
 
 2. **Yêu cầu hệ thống**:
    - Docker
